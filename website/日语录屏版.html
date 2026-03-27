@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>录屏版 - 养成地道日语大脑</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #8B2252;
+      --accent: #2E6B4F;
+      --bg: #FDFAF7;
+      --card-bg: #FFFFFF;
+      --text: #2D2D2D;
+      --text-light: #6B7280;
+      --border: #E8E4DF;
+      --active-bg: #FFF8E1;
+      --active-border: #FFD54F;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f0ebe6;
+      color: var(--text);
+      -webkit-text-size-adjust: 100%;
+      -webkit-font-smoothing: antialiased;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* 录屏版: 375x812 iPhone比例, zoom 2x 清晰渲染, 无顶部导航 */
+    .phone-frame {
+      width: 375px;
+      height: calc(100vh / 2);
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+      zoom: 2;
+      transform-origin: top left;
+    }
+
+    .ep-tabs {
+      flex-shrink: 0;
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .ep-tab {
+      flex: 1;
+      padding: 10px 0;
+      text-align: center;
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: var(--text-light);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      -webkit-tap-highlight-color: transparent;
+      transition: all 0.2s;
+    }
+    .ep-tab.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+      font-weight: 700;
+    }
+
+    .video-section {
+      flex-shrink: 0;
+      background: #000;
+      position: relative;
+    }
+    .video-section video {
+      width: 100%;
+      display: block;
+      height: 180px;
+      object-fit: contain;
+      background: #000;
+    }
+    .video-slogan {
+      position: absolute;
+      bottom: 8px;
+      right: 10px;
+      color: rgba(255,255,255,0.85);
+      font-size: 0.7rem;
+      font-weight: 500;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+      pointer-events: none;
+    }
+
+    .subtitle-list {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 8px 10px;
+    }
+
+    .sub-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 11px 13px;
+      margin-bottom: 7px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .sub-card.active {
+      background: var(--active-bg);
+      border-color: var(--active-border);
+      box-shadow: 0 2px 10px rgba(255,213,79,0.25);
+    }
+
+    .sub-time {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 2px;
+    }
+    .sub-card.active .sub-time { color: #E65100; }
+
+    .sub-jp {
+      font-size: 0.95rem;
+      font-weight: 500;
+      line-height: 1.7;
+      margin-bottom: 2px;
+      word-break: break-word;
+    }
+    .sub-cn {
+      font-size: 0.82rem;
+      color: var(--text-light);
+      line-height: 1.5;
+    }
+
+    .hl-pink { background: linear-gradient(180deg, transparent 60%, rgba(139,34,82,0.22) 60%); color: #8B2252; font-weight: 500; padding: 0 2px; }
+    .hl-green { background: linear-gradient(180deg, transparent 60%, rgba(46,107,79,0.22) 60%); color: #2E6B4F; font-weight: 500; padding: 0 2px; }
+    .hl-blue { background: linear-gradient(180deg, transparent 60%, rgba(37,99,165,0.22) 60%); color: #2563A5; font-weight: 500; padding: 0 2px; }
+    .hl-purple { background: linear-gradient(180deg, transparent 60%, rgba(126,58,183,0.22) 60%); color: #7E3AB7; font-weight: 500; padding: 0 2px; }
+    .hl-orange { background: linear-gradient(180deg, transparent 60%, rgba(194,120,3,0.22) 60%); color: #A16207; font-weight: 500; padding: 0 2px; }
+    .hl-teal { background: linear-gradient(180deg, transparent 60%, rgba(13,148,136,0.22) 60%); color: #0D9488; font-weight: 500; padding: 0 2px; }
+    .hl-red { background: linear-gradient(180deg, transparent 60%, rgba(185,28,28,0.22) 60%); color: #B91C1C; font-weight: 500; padding: 0 2px; }
+
+    .bottom-bar {
+      flex-shrink: 0;
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      padding: 8px 10px 10px;
+    }
+    .bar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .bar-btn-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      min-width: 44px;
+    }
+    .bar-btn-group .bar-icon { font-size: 1.2rem; line-height: 1; }
+    .bar-btn-group .bar-label { font-size: 0.6rem; color: var(--text-light); }
+    .bar-btn-group.active .bar-icon,
+    .bar-btn-group.active .bar-label { color: var(--primary); }
+
+    .btn-play-main {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: #4CAF50;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      font-size: 1.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 3px 14px rgba(76,175,80,0.4);
+      flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
+      margin: -10px 0;
+    }
+  </style>
+</head>
+<body>
+<div class="phone-frame">
+
+  <div class="ep-tabs">
+    <div class="ep-tab active" data-ep="1">EP1</div>
+    <div class="ep-tab" data-ep="2">EP2</div>
+    <div class="ep-tab" data-ep="3">EP3</div>
+    <div class="ep-tab" data-ep="4">EP4</div>
+    <div class="ep-tab" data-ep="5">EP5</div>
+    <div class="ep-tab" data-ep="6">EP6</div>
+    <div class="ep-tab" data-ep="7">EP7</div>
+  </div>
+
+  <div class="video-section" id="videoSection1">
+    <video id="player1" preload="metadata" playsinline webkit-playsinline>
+      <source src="media/ep1_video.mp4" type="video/mp4">
+    </video>
+    <div class="video-slogan">跟着油管 每天无痛学日语</div>
+  </div>
+
+  <div class="video-section" id="videoSection2" style="display:none;">
+    <video id="player2" preload="metadata" playsinline webkit-playsinline>
+      <source src="media/ep2_video.mp4" type="video/mp4">
+    </video>
+    <div class="video-slogan">跟着油管 每天无痛学日语</div>
+  </div>
+
+  <div class="video-section" id="videoSection3" style="display:none;">
+    <video id="player3" preload="metadata" playsinline webkit-playsinline>
+      <source src="media/ep3_video.mp4" type="video/mp4">
+    </video>
+    <div class="video-slogan">跟着油管 每天无痛学日语</div>
+  </div>
+
+  <div class="video-section" id="videoSection4" style="display:none;">
+    <video id="player4" preload="metadata" playsinline webkit-playsinline>
+      <source src="media/ep4_video.mp4" type="video/mp4">
+    </video>
+    <div class="video-slogan">跟着油管 每天无痛学日语</div>
+  </div>
+
+  <div class="video-section" id="videoSection5" style="display:none;">
+    <video id="player5" preload="metadata" playsinline webkit-playsinline>
+      <source src="media/ep5_video.mp4" type="video/mp4">
+    </video>
+    <div class="video-slogan">跟着油管 每天无痛学日语</div>
+  </div>
+
+  <div class="video-section" id="videoSection6" style="display:none;">
+    <video id="player6" preload="metadata" playsinline webkit-playsinline>
+      <source src="media/ep6_video.mp4" type="video/mp4">
+    </video>
+    <div class="video-slogan">跟着油管 每天无痛学日语</div>
+  </div>
+
+  <div class="video-section" id="videoSection7" style="display:none;">
+    <video id="player7" preload="metadata" playsinline webkit-playsinline>
+      <source src="media/ep7_video.mp4" type="video/mp4">
+    </video>
+    <div class="video-slogan">跟着油管 每天无痛学日语</div>
+  </div>
+
+  <!-- EP1 Subtitles -->
+  <div class="subtitle-list" id="subtitleList1">
+    <div class="sub-card" data-start="0" data-end="9.4">
+      <div class="sub-time">0:00</div>
+      <div class="sub-jp"><ruby>一本<rt>いっぽん</rt></ruby>の<ruby>映画<rt>えいが</rt></ruby>を<span class="hl-pink">きっかけ</span>に、<ruby>自<rt>みずか</rt></ruby>らお<ruby>肉<rt>にく</rt></ruby>を<span class="hl-green"><ruby>摂取<rt>せっしゅ</rt></ruby></span>しなくなってから、</div>
+      <div class="sub-cn">因为一部电影，我就再也不吃肉了，</div>
+    </div>
+    <div class="sub-card" data-start="9.4" data-end="15.1">
+      <div class="sub-time">0:09</div>
+      <div class="sub-jp"><span class="hl-blue"><ruby>食事<rt>しょくじ</rt></ruby></span>は<ruby>野菜<rt>やさい</rt></ruby>や<ruby>穀物<rt>こくもつ</rt></ruby><ruby>中心<rt>ちゅうしん</rt></ruby>になった。</div>
+      <div class="sub-cn">平时吃的就变成蔬菜和粗粮为主了。</div>
+    </div>
+    <div class="sub-card" data-start="15.1" data-end="20.9">
+      <div class="sub-time">0:15</div>
+      <div class="sub-jp"><ruby>今日<rt>きょう</rt></ruby>もYouTubeのレシピを<span class="hl-purple"><ruby>参考<rt>さんこう</rt></ruby>に</span><span class="hl-blue">ヴィーガン</span>カレーを<ruby>作<rt>つく</rt></ruby>ってみる。</div>
+      <div class="sub-cn">今天也照着YouTube上的食谱，试着做个纯素咖喱。</div>
+    </div>
+    <div class="sub-card" data-start="20.9" data-end="33">
+      <div class="sub-time">0:21</div>
+      <div class="sub-jp"><span class="hl-orange"><ruby>八百屋<rt>やおや</rt></ruby></span>のおじさんに<ruby>心配<rt>しんぱい</rt></ruby>されるほどたくさん<ruby>買<rt>か</rt></ruby>った<span class="hl-green">きのこ</span>を<ruby>使<rt>つか</rt></ruby>って、<ruby>動物<rt>どうぶつ</rt></ruby>の<span class="hl-teal"><ruby>犠牲<rt>ぎせい</rt></ruby></span>を<ruby>伴<rt>ともな</rt></ruby>わない、<ruby>愛<rt>あい</rt></ruby>のこもったヘルシーレシピ。</div>
+      <div class="sub-cn">用在菜店买的、多到老板都替我操心的蘑菇，做一道没有肉的、满满爱心的健康菜。</div>
+    </div>
+    <div class="sub-card" data-start="33" data-end="41.8">
+      <div class="sub-time">0:33</div>
+      <div class="sub-jp"><ruby>体<rt>からだ</rt></ruby>は<span class="hl-green"><ruby>食事<rt>しょくじ</rt></ruby>で<ruby>作<rt>つく</rt></ruby>られる</span>というように、<ruby>多<rt>おお</rt></ruby>くの<ruby>病気<rt>びょうき</rt></ruby>は<span class="hl-purple"><ruby>食生活<rt>しょくせいかつ</rt></ruby></span>との<ruby>因果関係<rt>いんがかんけい</rt></ruby>が<ruby>証明<rt>しょうめい</rt></ruby>されている。</div>
+      <div class="sub-cn">都说吃什么身体就是什么样，很多病其实都跟饮食习惯有关。</div>
+    </div>
+    <div class="sub-card" data-start="41.8" data-end="46">
+      <div class="sub-time">0:42</div>
+      <div class="sub-jp">できるだけ<span class="hl-orange"><ruby>添加物<rt>てんかぶつ</rt></ruby></span>も<ruby>取<rt>と</rt></ruby>りたくないから、</div>
+      <div class="sub-cn">因为不太想吃到添加剂嘛，</div>
+    </div>
+    <div class="sub-card" data-start="46" data-end="50">
+      <div class="sub-time">0:46</div>
+      <div class="sub-jp"><span class="hl-teal"><ruby>市販<rt>しはん</rt></ruby></span>のルーやレトルト<ruby>食品<rt>しょくひん</rt></ruby>は<ruby>使<rt>つか</rt></ruby>わない。</div>
+      <div class="sub-cn">所以外面卖的那种咖喱块啊、速食食品啊都不用。</div>
+    </div>
+    <div class="sub-card" data-start="50" data-end="60">
+      <div class="sub-time">0:50</div>
+      <div class="sub-jp"><ruby>調味料<rt>ちょうみりょう</rt></ruby>も<span class="hl-green"><ruby>可能<rt>かのう</rt></ruby>な<ruby>限<rt>かぎ</rt></ruby>り</span>シンプルなものを<span class="hl-pink"><ruby>選<rt>えら</rt></ruby>ぶ</span>ようになった。</div>
+      <div class="sub-cn">调味料也是尽量选简单的。</div>
+    </div>
+  </div>
+
+  <!-- EP2 Subtitles -->
+  <div class="subtitle-list" id="subtitleList2" style="display:none;">
+    <div class="sub-card" data-start="1.0" data-end="3.9">
+      <div class="sub-time">0:01</div>
+      <div class="sub-jp">1<ruby>週間<rt>しゅうかん</rt></ruby>のレンジ<ruby>生活<rt>せいかつ</rt></ruby>いってみよう！</div>
+      <div class="sub-cn">微波炉过一周，走起！</div>
+    </div>
+    <div class="sub-card" data-start="3.9" data-end="7.2">
+      <div class="sub-time">0:04</div>
+      <div class="sub-jp"><span class="hl-pink"><ruby>買<rt>か</rt></ruby>い<ruby>物<rt>もの</rt></ruby></span><ruby>前<rt>まえ</rt></ruby>に<span class="hl-blue"><ruby>冷蔵庫<rt>れいぞうこ</rt></ruby></span>を<span class="hl-green">チェック</span>します。</div>
+      <div class="sub-cn">出门买东西之前，先翻翻冰箱里还有啥。</div>
+    </div>
+    <div class="sub-card" data-start="7.2" data-end="10.6">
+      <div class="sub-time">0:07</div>
+      <div class="sub-jp"><ruby>生姜<rt>しょうが</rt></ruby>と<span class="hl-orange">キャベツ</span>がありました。</div>
+      <div class="sub-cn">有姜和卷心菜。</div>
+    </div>
+    <div class="sub-card" data-start="10.6" data-end="13.6">
+      <div class="sub-time">0:11</div>
+      <div class="sub-jp">あと<ruby>玉<rt>たま</rt></ruby>ねぎもありました。</div>
+      <div class="sub-cn">还有洋葱。</div>
+    </div>
+    <div class="sub-card" data-start="13.6" data-end="18.9">
+      <div class="sub-time">0:14</div>
+      <div class="sub-jp"><span class="hl-teal"><ruby>冷凍庫<rt>れいとうこ</rt></ruby></span>にはひき<ruby>肉<rt>にく</rt></ruby>と<ruby>豚<rt>ぶた</rt></ruby>こま<ruby>肉<rt>にく</rt></ruby>がありました。</div>
+      <div class="sub-cn">冷冻那边有肉末和猪肉片。</div>
+    </div>
+    <div class="sub-card" data-start="18.9" data-end="20.9">
+      <div class="sub-time">0:19</div>
+      <div class="sub-jp"><ruby>今週<rt>こんしゅう</rt></ruby>はレンジ<span class="hl-purple">レシピ</span>を<span class="hl-purple">まとめて</span>みました。</div>
+      <div class="sub-cn">这周整理了一套微波炉食谱。</div>
+    </div>
+    <div class="sub-card" data-start="20.9" data-end="23.8">
+      <div class="sub-time">0:21</div>
+      <div class="sub-jp"><ruby>全部<rt>ぜんぶ</rt></ruby><span class="hl-pink"><ruby>美味<rt>おい</rt></ruby>しすぎて</span><ruby>幸<rt>しあわ</rt></ruby>せ1<ruby>週間<rt>しゅうかん</rt></ruby>だったので、<ruby>最後<rt>さいご</rt></ruby>まで<ruby>見<rt>み</rt></ruby>てね。</div>
+      <div class="sub-cn">每一道都超好吃，太幸福了，一定要看到最后哦。</div>
+    </div>
+    <div class="sub-card" data-start="23.8" data-end="26.6">
+      <div class="sub-time">0:24</div>
+      <div class="sub-jp">さあ、<span class="hl-pink"><ruby>買<rt>か</rt></ruby>い<ruby>物<rt>もの</rt></ruby></span>に<span class="hl-green"><ruby>行<rt>い</rt></ruby>ってきます</span>！</div>
+      <div class="sub-cn">好嘞，出门买菜去！</div>
+    </div>
+    <div class="sub-card" data-start="26.6" data-end="29.2">
+      <div class="sub-time">0:27</div>
+      <div class="sub-jp">いつものお<ruby>店<rt>みせ</rt></ruby>にやってきました。</div>
+      <div class="sub-cn">到了平时常去的那家店。</div>
+    </div>
+    <div class="sub-card" data-start="29.2" data-end="31.9">
+      <div class="sub-time">0:29</div>
+      <div class="sub-jp">この<ruby>日<rt>ひ</rt></ruby>は<span class="hl-blue"><ruby>充実<rt>じゅうじつ</rt></ruby></span>してて<ruby>超<rt>ちょう</rt></ruby><ruby>得<rt>とく</rt></ruby>した<ruby>気分<rt>きぶん</rt></ruby>でした。</div>
+      <div class="sub-cn">这天品种特别全，感觉赚到了。</div>
+    </div>
+    <div class="sub-card" data-start="31.9" data-end="34.5">
+      <div class="sub-time">0:32</div>
+      <div class="sub-jp">まずはトマトを<span class="hl-orange">ゲット</span>、<span class="hl-purple">やった</span>！</div>
+      <div class="sub-cn">先拿了个番茄，耶！</div>
+    </div>
+    <div class="sub-card" data-start="34.5" data-end="36.7">
+      <div class="sub-time">0:35</div>
+      <div class="sub-jp"><ruby>白菜<rt>はくさい</rt></ruby>も40<ruby>円<rt>えん</rt></ruby>でゲット。</div>
+      <div class="sub-cn">白菜40日元也拿到了。</div>
+    </div>
+    <div class="sub-card" data-start="36.7" data-end="38.9">
+      <div class="sub-time">0:37</div>
+      <div class="sub-jp">そしてりんごと<ruby>柿<rt>かき</rt></ruby>も<span class="hl-teal"><ruby>安<rt>やす</rt></ruby>くなってた</span>。</div>
+      <div class="sub-cn">苹果和柿子也降价了。</div>
+    </div>
+    <div class="sub-card" data-start="38.9" data-end="41.6">
+      <div class="sub-time">0:39</div>
+      <div class="sub-jp"><ruby>節約<rt>せつやく</rt></ruby>してると<span class="hl-pink">フルーツまで<ruby>手<rt>て</rt></ruby>が<ruby>出<rt>だ</rt></ruby>せない</span>からありがたい。</div>
+      <div class="sub-cn">省着花的时候水果根本买不起，能降价真的太感谢了。</div>
+    </div>
+    <div class="sub-card" data-start="41.6" data-end="43.9">
+      <div class="sub-time">0:42</div>
+      <div class="sub-jp">ネギも<span class="hl-green"><ruby>半額<rt>はんがく</rt></ruby></span>のがあったらそっち<ruby>取<rt>と</rt></ruby>っちゃうよね。</div>
+      <div class="sub-cn">葱嘛，有半价的肯定选那个啊。</div>
+    </div>
+    <div class="sub-card" data-start="43.9" data-end="52.3">
+      <div class="sub-time">0:44</div>
+      <div class="sub-jp"><ruby>合計<rt>ごうけい</rt></ruby>1978<ruby>円<rt>えん</rt></ruby>で、1<ruby>週間<rt>しゅうかん</rt></ruby><span class="hl-orange">2000<ruby>円<rt>えん</rt></ruby><ruby>生活<rt>せいかつ</rt></ruby></span>スタートです！</div>
+      <div class="sub-cn">一共1978日元，2000日元过一周，开始！</div>
+    </div>
+    <div class="sub-card" data-start="52.3" data-end="55.0">
+      <div class="sub-time">0:52</div>
+      <div class="sub-jp">1<ruby>日目<rt>にちめ</rt></ruby>。</div>
+      <div class="sub-cn">第一天。</div>
+    </div>
+    <div class="sub-card" data-start="55.0" data-end="57.0">
+      <div class="sub-time">0:55</div>
+      <div class="sub-jp"><ruby>夜<rt>よる</rt></ruby>ご<ruby>飯<rt>はん</rt></ruby>は<span class="hl-teal"><ruby>肉豆腐<rt>にくどうふ</rt></ruby></span>を<ruby>作<rt>つく</rt></ruby>ります。</div>
+      <div class="sub-cn">晚饭做个肉豆腐。</div>
+    </div>
+    <div class="sub-card" data-start="57.0" data-end="58.7">
+      <div class="sub-time">0:57</div>
+      <div class="sub-jp">いただきます。</div>
+      <div class="sub-cn">开动啦。</div>
+    </div>
+    <div class="sub-card" data-start="58.7" data-end="60.0">
+      <div class="sub-time">0:59</div>
+      <div class="sub-jp"><ruby>美味<rt>おい</rt></ruby>しい！</div>
+      <div class="sub-cn">好吃！</div>
+    </div>
+  </div>
+
+  <!-- EP3 Subtitles -->
+  <div class="subtitle-list" id="subtitleList3" style="display:none;">
+    <div class="sub-card" data-start="0.7" data-end="4.2">
+      <div class="sub-time">0:01</div>
+      <div class="sub-jp">こんにちは、<ruby>始<rt>はじ</rt></ruby>まりました、ミキぽんチャンネルです。</div>
+      <div class="sub-cn">嗨大家好，这里是Mikipon频道。</div>
+    </div>
+    <div class="sub-card" data-start="4.2" data-end="9.7">
+      <div class="sub-time">0:04</div>
+      <div class="sub-jp"><ruby>今回<rt>こんかい</rt></ruby>は<ruby>前回<rt>ぜんかい</rt></ruby><ruby>紹介<rt>しょうかい</rt></ruby>した2016<ruby>年<rt>ねん</rt></ruby>のマイベストコスメを<ruby>使<rt>つか</rt></ruby>った<ruby>毎日<rt>まいにち</rt></ruby>メイクを<ruby>紹介<rt>しょうかい</rt></ruby>します。</div>
+      <div class="sub-cn">今天要用上次介绍的2016年度爱用好物来画一个日常妆。</div>
+    </div>
+    <div class="sub-card" data-start="9.7" data-end="13.3">
+      <div class="sub-time">0:10</div>
+      <div class="sub-jp">それではミキぽんチャンネル、<ruby>始<rt>はじ</rt></ruby>まるよ！</div>
+      <div class="sub-cn">那我们开始吧！</div>
+    </div>
+    <div class="sub-card" data-start="13.3" data-end="19.1">
+      <div class="sub-time">0:13</div>
+      <div class="sub-jp">まず<span class="hl-blue"><ruby>保湿<rt>ほしつ</rt></ruby></span>をしっかりとした<ruby>後<rt>あと</rt></ruby>に、こちらのSK-IIのミストタイプを<ruby>顔<rt>かお</rt></ruby><ruby>全体<rt>ぜんたい</rt></ruby>に<span class="hl-pink"><ruby>吹<rt>ふ</rt></ruby>きかけます</span>。</div>
+      <div class="sub-cn">先做好保湿，然后把这款SK-II的喷雾喷在整张脸上。</div>
+    </div>
+    <div class="sub-card" data-start="19.1" data-end="24.5">
+      <div class="sub-time">0:19</div>
+      <div class="sub-jp">そしてティッシュでこのように<span class="hl-green"><ruby>拭<rt>ふ</rt></ruby>き<ruby>取<rt>と</rt></ruby>って</span>、<ruby>顔<rt>かお</rt></ruby>がベタベタしないか、<ruby>余分<rt>よぶん</rt></ruby>な<ruby>皮脂<rt>ひし</rt></ruby>がないか<ruby>確<rt>たし</rt></ruby>かめてから、</div>
+      <div class="sub-cn">再用纸巾这样按压一下，确认脸上不会黏黏的，也没有多余的油脂。</div>
+    </div>
+    <div class="sub-card" data-start="24.5" data-end="29">
+      <div class="sub-time">0:25</div>
+      <div class="sub-jp">こちらのポール&ジョーのポアスムージングプライマーの01<ruby>番<rt>ばん</rt></ruby>。</div>
+      <div class="sub-cn">接下来是这支PAUL & JOE的毛孔修饰妆前乳01号。</div>
+    </div>
+    <div class="sub-card" data-start="29" data-end="33">
+      <div class="sub-time">0:29</div>
+      <div class="sub-jp">これはとてもさらっとした<span class="hl-purple">テクスチャー</span>で、<ruby>毛穴<rt>けあな</rt></ruby>の<ruby>気<rt>き</rt></ruby>になる<span class="hl-orange"><ruby>凹凸<rt>おうとつ</rt></ruby></span>を<ruby>隠<rt>かく</rt></ruby>してくれる<ruby>効果<rt>こうか</rt></ruby>があります。</div>
+      <div class="sub-cn">它的质地非常清爽，能帮你把毛孔那些不平整的地方遮住。</div>
+    </div>
+    <div class="sub-card" data-start="33" data-end="35.4">
+      <div class="sub-time">0:33</div>
+      <div class="sub-jp">これを<ruby>顔<rt>かお</rt></ruby><ruby>全体<rt>ぜんたい</rt></ruby>に<ruby>塗<rt>ぬ</rt></ruby>っていきます。</div>
+      <div class="sub-cn">把它涂满整张脸。</div>
+    </div>
+    <div class="sub-card" data-start="35.4" data-end="39.2">
+      <div class="sub-time">0:35</div>
+      <div class="sub-jp">そして<ruby>次<rt>つぎ</rt></ruby>にシュウウエムラのこちらの<ruby>下地<rt>したじ</rt></ruby>を<ruby>手<rt>て</rt></ruby>の<ruby>甲<rt>こう</rt></ruby>に<ruby>出<rt>だ</rt></ruby>してから、<ruby>顔<rt>かお</rt></ruby><ruby>全体<rt>ぜんたい</rt></ruby>に<ruby>指<rt>ゆび</rt></ruby>で<ruby>塗<rt>ぬ</rt></ruby>っていきます。</div>
+      <div class="sub-cn">然后取这支植村秀的隔离，先挤在手背上，再用手指涂到全脸。</div>
+    </div>
+    <div class="sub-card" data-start="39.2" data-end="45.5">
+      <div class="sub-time">0:39</div>
+      <div class="sub-jp">これは<ruby>小<rt>ちい</rt></ruby>さなパールが<ruby>入<rt>はい</rt></ruby>っていて、<ruby>肌<rt>はだ</rt></ruby>を<ruby>少<rt>すこ</rt></ruby>しツヤっぽく<ruby>見<rt>み</rt></ruby>せてくれます。</div>
+      <div class="sub-cn">这里面有细闪珠光，能让皮肤看起来带一点光泽感。</div>
+    </div>
+    <div class="sub-card" data-start="45.5" data-end="48.7">
+      <div class="sub-time">0:46</div>
+      <div class="sub-jp"><ruby>次<rt>つぎ</rt></ruby>にこちらのカバーマークのファンデーションを<ruby>塗<rt>ぬ</rt></ruby>っていきます。</div>
+      <div class="sub-cn">接下来上这瓶COVERMARK的粉底液。</div>
+    </div>
+    <div class="sub-card" data-start="48.7" data-end="53.1">
+      <div class="sub-time">0:49</div>
+      <div class="sub-jp">これは<ruby>少量<rt>しょうりょう</rt></ruby>でもかなり<span class="hl-teal"><ruby>伸<rt>の</rt></ruby>びが<ruby>良<rt>よ</rt></ruby>くて</span>、<span class="hl-blue"><ruby>薄付<rt>うすづ</rt></ruby>き</span>なのにとてもカバー<ruby>力<rt>りょく</rt></ruby>があって、</div>
+      <div class="sub-cn">这款只要一点点就特别好推开，薄薄一层遮瑕力就很强。</div>
+    </div>
+    <div class="sub-card" data-start="53.1" data-end="57.1">
+      <div class="sub-time">0:53</div>
+      <div class="sub-jp"><ruby>私<rt>わたし</rt></ruby>はこのファンデーションに<ruby>変<rt>か</rt></ruby>えてからメイク<ruby>時間<rt>じかん</rt></ruby>がかなり<span class="hl-pink"><ruby>短縮<rt>たんしゅく</rt></ruby></span>されました。</div>
+      <div class="sub-cn">自从换了这瓶粉底之后，我化妆的时间缩短了好多。</div>
+    </div>
+    <div class="sub-card" data-start="57.1" data-end="67.1">
+      <div class="sub-time">0:57</div>
+      <div class="sub-jp"><ruby>使<rt>つか</rt></ruby>うたびにこれにしてよかったなと<ruby>感謝<rt>かんしゃ</rt></ruby>してしまうファンデーションです。</div>
+      <div class="sub-cn">每次用都会觉得"还好当初换了这瓶"，真的很感谢这款粉底。</div>
+    </div>
+  </div>
+
+  <!-- EP4 Subtitles -->
+  <div class="subtitle-list" id="subtitleList4" style="display:none;">
+    <div class="sub-card" data-start="0" data-end="7">
+      <div class="sub-time">0:00</div>
+      <div class="sub-jp">はい、<ruby>色々<rt>いろいろ</rt></ruby><ruby>用事<rt>ようじ</rt></ruby>が<span class="hl-blue"><ruby>片付<rt>かたづ</rt></ruby>きましたら</span>、あとはもう<ruby>寝<rt>ね</rt></ruby>るまで<ruby>勉強<rt>べんきょう</rt></ruby>をするということで、<span class="hl-pink"><ruby>勉強<rt>べんきょう</rt></ruby><ruby>配信<rt>はいしん</rt></ruby></span>をしていきます。</div>
+      <div class="sub-cn">好，杂事都处理完了，接下来就是学到睡觉为止，所以开始学习直播啦。</div>
+    </div>
+    <div class="sub-card" data-start="7" data-end="13">
+      <div class="sub-time">0:07</div>
+      <div class="sub-jp">いつも<ruby>勉強<rt>べんきょう</rt></ruby><ruby>配信<rt>はいしん</rt></ruby>に<ruby>参加<rt>さんか</rt></ruby>してくださっている<ruby>方<rt>かた</rt></ruby>、ありがとうございます。</div>
+      <div class="sub-cn">每次都来参加学习直播的朋友们，谢谢你们。</div>
+    </div>
+    <div class="sub-card" data-start="13" data-end="17">
+      <div class="sub-time">0:13</div>
+      <div class="sub-jp">とっても<span class="hl-green"><ruby>励<rt>はげ</rt></ruby>み</span>になっております。</div>
+      <div class="sub-cn">真的给了我很大的动力。</div>
+    </div>
+    <div class="sub-card" data-start="17" data-end="24">
+      <div class="sub-time">0:17</div>
+      <div class="sub-jp"><ruby>私<rt>わたし</rt></ruby>の<ruby>現状<rt>げんじょう</rt></ruby>のライティングの<ruby>勉強<rt>べんきょう</rt></ruby><ruby>方法<rt>ほうほう</rt></ruby>なんですけれども、</div>
+      <div class="sub-cn">说说我目前写作练习的学习方法吧。</div>
+    </div>
+    <div class="sub-card" data-start="24" data-end="37">
+      <div class="sub-time">0:24</div>
+      <div class="sub-jp"><ruby>調<rt>しら</rt></ruby>べたところ、タイピングで<ruby>英作文<rt>えいさくぶん</rt></ruby>を<ruby>打<rt>う</rt></ruby>っていくよりも、まず<span class="hl-purple"><ruby>手書<rt>てが</rt></ruby>き</span>でノートに<ruby>書<rt>か</rt></ruby>いていった<ruby>方<rt>ほう</rt></ruby>が、<ruby>記憶<rt>きおく</rt></ruby>の<span class="hl-orange"><ruby>定着率<rt>ていちゃくりつ</rt></ruby></span>は<ruby>高<rt>たか</rt></ruby>いらしいので、</div>
+      <div class="sub-cn">我查了一下发现，比起用键盘打英语作文，先用手写在笔记本上，记忆的留存率好像更高。</div>
+    </div>
+    <div class="sub-card" data-start="37" data-end="48">
+      <div class="sub-time">0:37</div>
+      <div class="sub-jp">まずは<ruby>正<rt>ただ</rt></ruby>しい<span class="hl-teal"><ruby>例文<rt>れいぶん</rt></ruby></span>を3<ruby>回<rt>かい</rt></ruby>ぐらい、がーっと<ruby>手書<rt>てが</rt></ruby>きで<ruby>書<rt>か</rt></ruby>いちゃって、</div>
+      <div class="sub-cn">所以我就先把正确的例句手抄大概三遍，一口气写完。</div>
+    </div>
+    <div class="sub-card" data-start="48" data-end="54">
+      <div class="sub-time">0:48</div>
+      <div class="sub-jp"><ruby>一応<rt>いちおう</rt></ruby>ぼんやりその<ruby>型<rt>かた</rt></ruby>と<ruby>言<rt>い</rt></ruby>いますか<span class="hl-blue">パターン</span>を<ruby>覚<rt>おぼ</rt></ruby>えまして、</div>
+      <div class="sub-cn">先大致记住那个句型，或者说套路吧。</div>
+    </div>
+    <div class="sub-card" data-start="54" data-end="65">
+      <div class="sub-time">0:54</div>
+      <div class="sub-jp">だいたい<ruby>覚<rt>おぼ</rt></ruby>えたかなっていうぐらいになると、<ruby>最後<rt>さいご</rt></ruby>にタイピングで<ruby>日本語<rt>にほんご</rt></ruby>から<ruby>英文<rt>えいぶん</rt></ruby>に<ruby>訳<rt>やく</rt></ruby>していくという<ruby>感<rt>かん</rt></ruby>じで<ruby>練習<rt>れんしゅう</rt></ruby>をしています。</div>
+      <div class="sub-cn">等差不多记住了，最后再用键盘把日语翻译成英文，就这样练习。</div>
+    </div>
+    <div class="sub-card" data-start="65" data-end="75">
+      <div class="sub-time">1:05</div>
+      <div class="sub-jp">もちろんノートに3<ruby>回<rt>かい</rt></ruby><ruby>書<rt>か</rt></ruby>いたからって100%<ruby>覚<rt>おぼ</rt></ruby>えているわけではないので、タイピングも<ruby>時間<rt>じかん</rt></ruby>がかかって<span class="hl-pink"><ruby>苦労<rt>くろう</rt></ruby>します</span>。</div>
+      <div class="sub-cn">当然了，抄三遍也不可能百分之百记住，所以打字的时候还是挺费劲的。</div>
+    </div>
+  </div>
+
+  <!-- EP5 Subtitles -->
+  <div class="subtitle-list" id="subtitleList5" style="display:none;">
+    <div class="sub-card" data-start="0.6" data-end="5.5">
+      <div class="sub-time">0:01</div>
+      <div class="sub-jp"><ruby>準備<rt>じゅんび</rt></ruby>ができました！<ruby>行<rt>い</rt></ruby>ってきまーす、レッツゴー！</div>
+      <div class="sub-cn">准备好了！出发啦，let's go！</div>
+    </div>
+    <div class="sub-card" data-start="5.5" data-end="11.2">
+      <div class="sub-time">0:06</div>
+      <div class="sub-jp"><ruby>今日<rt>きょう</rt></ruby>はめっちゃ<ruby>天気<rt>てんき</rt></ruby>がいいですね。バス<ruby>停<rt>てい</rt></ruby>まで<ruby>歩<rt>ある</rt></ruby>いて<span class="hl-pink"><ruby>向<rt>む</rt></ruby>かいます</span>。</div>
+      <div class="sub-cn">今天天气超好的呢。走着去公交站。</div>
+    </div>
+    <div class="sub-card" data-start="11.2" data-end="14">
+      <div class="sub-time">0:11</div>
+      <div class="sub-jp"><ruby>教室<rt>きょうしつ</rt></ruby>に<span class="hl-blue"><ruby>到着<rt>とうちゃく</rt></ruby>しました</span>！</div>
+      <div class="sub-cn">到教室啦！</div>
+    </div>
+    <div class="sub-card" data-start="14" data-end="17.4">
+      <div class="sub-time">0:14</div>
+      <div class="sub-jp">これは<ruby>私<rt>わたし</rt></ruby>の<ruby>大好<rt>だいす</rt></ruby>きな<ruby>梅<rt>うめ</rt></ruby>シートです。</div>
+      <div class="sub-cn">这是我超爱的梅片。</div>
+    </div>
+    <div class="sub-card" data-start="17.4" data-end="20.4">
+      <div class="sub-time">0:17</div>
+      <div class="sub-jp"><span class="hl-pink"><ruby>授業<rt>じゅぎょう</rt></ruby></span>、ファイティン！</div>
+      <div class="sub-cn">上课，加油！</div>
+    </div>
+    <div class="sub-card" data-start="20.4" data-end="27">
+      <div class="sub-time">0:20</div>
+      <div class="sub-jp">この<ruby>授業<rt>じゅぎょう</rt></ruby>は、sustainable tourismといって、<ruby>観光<rt>かんこう</rt></ruby><ruby>系<rt>けい</rt></ruby>の<ruby>授業<rt>じゅぎょう</rt></ruby>で、<ruby>今日<rt>きょう</rt></ruby>が<ruby>最後<rt>さいご</rt></ruby>の<ruby>授業<rt>じゅぎょう</rt></ruby>でした。</div>
+      <div class="sub-cn">这门课叫sustainable tourism，是观光类的课，今天是最后一节了。</div>
+    </div>
+    <div class="sub-card" data-start="27" data-end="32.7">
+      <div class="sub-time">0:27</div>
+      <div class="sub-jp"><span class="hl-green"><ruby>課題<rt>かだい</rt></ruby></span>する<ruby>時間<rt>じかん</rt></ruby>を<span class="hl-purple">たっぷり</span>くれて、たくさん<span class="hl-orange"><ruby>質問<rt>しつもん</rt></ruby></span>できました。</div>
+      <div class="sub-cn">老师给了充足的时间做作业，还问了好多问题。</div>
+    </div>
+    <div class="sub-card" data-start="32.7" data-end="42.4">
+      <div class="sub-time">0:33</div>
+      <div class="sub-jp"><ruby>先生<rt>せんせい</rt></ruby>がラミントンというケーキを<ruby>買<rt>か</rt></ruby>ってきてくれて、みんなで<ruby>食<rt>た</rt></ruby>べました。すごくおいしかったです。</div>
+      <div class="sub-cn">老师买了一种叫lamington的蛋糕，大家一起吃了。超好吃的。</div>
+    </div>
+    <div class="sub-card" data-start="42.4" data-end="54.9">
+      <div class="sub-time">0:42</div>
+      <div class="sub-jp"><ruby>私<rt>わたし</rt></ruby>は<ruby>今<rt>いま</rt></ruby><ruby>帰<rt>かえ</rt></ruby>っているのではなく、とあるところに<span class="hl-pink"><ruby>向<rt>む</rt></ruby>かっています</span>！さあ、どこに<ruby>向<rt>む</rt></ruby>かっているでしょう？</div>
+      <div class="sub-cn">我现在不是回家哦，而是去一个地方！猜猜看，去哪儿呢？</div>
+    </div>
+    <div class="sub-card" data-start="54.9" data-end="60.8">
+      <div class="sub-time">0:55</div>
+      <div class="sub-jp"><ruby>正解<rt>せいかい</rt></ruby>はスタバでした。タンブラーが<ruby>可愛<rt>かわい</rt></ruby>すぎる。</div>
+      <div class="sub-cn">答案是星巴克。水杯也太可爱了吧。</div>
+    </div>
+    <div class="sub-card" data-start="60.8" data-end="69.9">
+      <div class="sub-time">1:01</div>
+      <div class="sub-jp">オーストラリアのスタバはフードが<span class="hl-teal"><ruby>充実<rt>じゅうじつ</rt></ruby></span>しているように<ruby>感<rt>かん</rt></ruby>じます。</div>
+      <div class="sub-cn">感觉澳洲的星巴克食物种类特别丰富。</div>
+    </div>
+    <div class="sub-card" data-start="69.9" data-end="79.9">
+      <div class="sub-time">1:10</div>
+      <div class="sub-jp"><ruby>私<rt>わたし</rt></ruby>は<ruby>最近<rt>さいきん</rt></ruby><span class="hl-blue">ハマっている</span>iced white choc mochaにしました。</div>
+      <div class="sub-cn">我点了最近迷上的iced white choc mocha。</div>
+    </div>
+  </div>
+
+  <!-- EP6 Subtitles -->
+  <div class="subtitle-list" id="subtitleList6" style="display:none;">
+    <div class="sub-card" data-start="0" data-end="10">
+      <div class="sub-time">0:00</div>
+      <div class="sub-jp">さて、<span class="hl-blue"><ruby>次<rt>つぎ</rt></ruby>の<ruby>日<rt>ひ</rt></ruby></span>はまずこちらへ<span class="hl-red"><ruby>行<rt>い</rt></ruby>きました</span>。</div>
+      <div class="sub-cn">第二天呢，先去了这个地方。</div>
+    </div>
+    <div class="sub-card" data-start="10" data-end="20">
+      <div class="sub-time">0:10</div>
+      <div class="sub-jp">このスターバックスは、「<span class="hl-blue"><ruby>世界<rt>せかい</rt></ruby>で1<ruby>番<rt>ばん</rt></ruby></span><span class="hl-green"><ruby>美<rt>うつく</rt></ruby>しい</span>スターバックス」と<ruby>言<rt>い</rt></ruby>われているそうです。</div>
+      <div class="sub-cn">据说这家星巴克号称"世界上最美的星巴克"。</div>
+    </div>
+    <div class="sub-card" data-start="20" data-end="30">
+      <div class="sub-time">0:20</div>
+      <div class="sub-jp"><span class="hl-red">あいにく</span>この<ruby>日<rt>ひ</rt></ruby>は<ruby>雨<rt>あめ</rt></ruby>だったけど、<ruby>天気<rt>てんき</rt></ruby>が<ruby>良<rt>よ</rt></ruby>い<ruby>春<rt>はる</rt></ruby>の<ruby>日<rt>ひ</rt></ruby>はこんな<span class="hl-blue"><ruby>景色<rt>けしき</rt></ruby></span>が<ruby>見<rt>み</rt></ruby>られるそう。</div>
+      <div class="sub-cn">可惜当天下雨了，不过听说天气好的春天能看到这样的景色。</div>
+    </div>
+    <div class="sub-card" data-start="30" data-end="38">
+      <div class="sub-time">0:30</div>
+      <div class="sub-jp"><span class="hl-blue"><ruby>店内<rt>てんない</rt></ruby></span>もとても<span class="hl-green">オシャレ</span>でした！</div>
+      <div class="sub-cn">店里也超时髦的！</div>
+    </div>
+    <div class="sub-card" data-start="38" data-end="50">
+      <div class="sub-time">0:38</div>
+      <div class="sub-jp"><span class="hl-purple">ちなみに</span>スターバックスのことを<ruby>日本人<rt>にほんじん</rt></ruby>は「<span class="hl-green">スタバ</span>」って<ruby>呼<rt>よ</rt></ruby>んでいるのを<ruby>知<rt>し</rt></ruby>っていましたか？</div>
+      <div class="sub-cn">话说回来，你知道日本人把星巴克叫"スタバ"吗？</div>
+    </div>
+    <div class="sub-card" data-start="50" data-end="62">
+      <div class="sub-time">0:50</div>
+      <div class="sub-jp">カフェラテを<ruby>飲<rt>の</rt></ruby>んだあとは、<ruby>少<rt>すこ</rt></ruby>し<span class="hl-blue">ドライブ</span>して、<span class="hl-green">おしゃれ</span>な<ruby>建物<rt>たてもの</rt></ruby>があったので<ruby>入<rt>はい</rt></ruby>ってみました♪</div>
+      <div class="sub-cn">喝完拿铁之后又开了一会儿车，看到一栋挺有格调的楼就进去逛了逛♪</div>
+    </div>
+    <div class="sub-card" data-start="62" data-end="74">
+      <div class="sub-time">1:02</div>
+      <div class="sub-jp">このネパールカレーを<span class="hl-orange"><ruby>注文<rt>ちゅうもん</rt></ruby>した</span>んですけど、<ruby>辛<rt>から</rt></ruby>さレベルを2にしてしまって、<span class="hl-teal">とんでもなく<ruby>辛<rt>から</rt></ruby>かった</span>です。</div>
+      <div class="sub-cn">点了这份尼泊尔咖喱，结果手一滑选了辣度2，辣得要命。</div>
+    </div>
+    <div class="sub-card" data-start="74" data-end="86">
+      <div class="sub-time">1:14</div>
+      <div class="sub-jp"><span class="hl-teal"><ruby>口<rt>くち</rt></ruby>から<ruby>火<rt>ひ</rt></ruby>が<ruby>出<rt>で</rt></ruby>そう</span>になりつつ、<ruby>街<rt>まち</rt></ruby>を<ruby>歩<rt>ある</rt></ruby>いていたら、こんな<ruby>感<rt>かん</rt></ruby>じで<span class="hl-pink"><ruby>路面電車<rt>ろめんでんしゃ</rt></ruby></span>が<ruby>走<rt>はし</rt></ruby>っていました！</div>
+      <div class="sub-cn">嘴巴都快喷火了，一边在街上走着，就看到路面电车在跑！</div>
+    </div>
+    <div class="sub-card" data-start="86" data-end="98">
+      <div class="sub-time">1:26</div>
+      <div class="sub-jp"><ruby>富山市<rt>とやまし</rt></ruby>はバスも<ruby>電車<rt>でんしゃ</rt></ruby>も<span class="hl-pink"><ruby>路面電車<rt>ろめんでんしゃ</rt></ruby></span>も<ruby>走<rt>はし</rt></ruby>っているので<span class="hl-pink"><ruby>便利<rt>べんり</rt></ruby></span>ですね♪</div>
+      <div class="sub-cn">富山市公交、电车、路面电车都有，出行还挺方便的♪</div>
+    </div>
+  </div>
+
+  <!-- EP7 Subtitles -->
+  <div class="subtitle-list" id="subtitleList7" style="display:none;">
+    <div class="sub-card" data-start="0" data-end="10">
+      <div class="sub-time">0:00</div>
+      <div class="sub-jp">みなさん、こんにちは！<span class="hl-green">今回</span>は、長野<span class="hl-blue">旅行</span>について話します。</div>
+      <div class="sub-cn">大家好！这次来聊聊去长野的旅行。</div>
+    </div>
+    <div class="sub-card" data-start="10" data-end="20">
+      <div class="sub-time">0:10</div>
+      <div class="sub-jp">名古屋から長野まで、<span class="hl-red">電車</span>で<span class="hl-green">行きました</span>。</div>
+      <div class="sub-cn">从名古屋到长野，坐的电车去的。</div>
+    </div>
+    <div class="sub-card" data-start="20" data-end="30">
+      <div class="sub-time">0:20</div>
+      <div class="sub-jp">朝6時50分に、名古屋<span class="hl-orange">駅</span>に<span class="hl-green">着きました</span>。</div>
+      <div class="sub-cn">早上六点五十到了名古屋站。</div>
+    </div>
+    <div class="sub-card" data-start="30" data-end="40">
+      <div class="sub-time">0:30</div>
+      <div class="sub-jp">朝7時<span class="hl-red">出発</span>の電車だったので今日は<span class="hl-purple">早起き</span>しました。</div>
+      <div class="sub-cn">因为是早上七点发车的电车，所以今天起了个大早。</div>
+    </div>
+    <div class="sub-card" data-start="40" data-end="50">
+      <div class="sub-time">0:40</div>
+      <div class="sub-jp">電車に<span class="hl-green">乗って</span>、いよいよ<span class="hl-red">出発</span>です。</div>
+      <div class="sub-cn">上了电车，终于要出发啦。</div>
+    </div>
+    <div class="sub-card" data-start="50" data-end="60">
+      <div class="sub-time">0:50</div>
+      <div class="sub-jp">今回わたしは「<span class="hl-orange">特急</span>しなの」に<span class="hl-green">乗りました</span>。</div>
+      <div class="sub-cn">这次我坐的是"特急信浓号"。</div>
+    </div>
+    <div class="sub-card" data-start="60" data-end="70">
+      <div class="sub-time">1:00</div>
+      <div class="sub-jp"><span class="hl-orange">特急</span>しなのは、名古屋から長野まで行く<span class="hl-teal">速い</span>電車です。</div>
+      <div class="sub-cn">特急信浓号是从名古屋到长野的快速列车。</div>
+    </div>
+    <div class="sub-card" data-start="70" data-end="80">
+      <div class="sub-time">1:10</div>
+      <div class="sub-jp">名古屋から長野まで約3時間<span class="hl-teal">かかります</span>。</div>
+      <div class="sub-cn">从名古屋到长野大概要三个小时。</div>
+    </div>
+    <div class="sub-card" data-start="80" data-end="90">
+      <div class="sub-time">1:20</div>
+      <div class="sub-jp">きっぷは<span class="hl-pink">指定席</span>で9,440円です。</div>
+      <div class="sub-cn">对号入座的票价是九千四百四十日元。</div>
+    </div>
+    <div class="sub-card" data-start="90" data-end="100">
+      <div class="sub-time">1:30</div>
+      <div class="sub-jp">ちょっと<span class="hl-orange">高い</span>ですが、はやくて<span class="hl-pink">便利</span>です。</div>
+      <div class="sub-cn">虽然有点贵，但是又快又方便。</div>
+    </div>
+    <div class="sub-card" data-start="100" data-end="110">
+      <div class="sub-time">1:40</div>
+      <div class="sub-jp"><span class="hl-red">電車</span>の中は<span class="hl-blue">きれい</span>でした。</div>
+      <div class="sub-cn">车厢里很干净。</div>
+    </div>
+    <div class="sub-card" data-start="110" data-end="120">
+      <div class="sub-time">1:50</div>
+      <div class="sub-jp"><span class="hl-pink">席</span>も<span class="hl-teal">広かった</span>です。</div>
+      <div class="sub-cn">座位也很宽敞。</div>
+    </div>
+    <div class="sub-card" data-start="120" data-end="130">
+      <div class="sub-time">2:00</div>
+      <div class="sub-jp"><span class="hl-blue">まど</span>から<span class="hl-purple">山</span>が見えました。</div>
+      <div class="sub-cn">从窗户能看到山。</div>
+    </div>
+  </div>
+
+  <div class="bottom-bar">
+    <div class="bar-inner">
+      <div class="bar-btn-group active" id="btnBilingual">
+        <span class="bar-icon">☰</span>
+        <span class="bar-label">双语</span>
+      </div>
+      <div class="bar-btn-group" id="btnSpeedCycle">
+        <span class="bar-icon">1x</span>
+        <span class="bar-label">倍速</span>
+      </div>
+      <button class="btn-play-main" id="btnPlayMain">&#9654;</button>
+      <div class="bar-btn-group" id="btnLoop">
+        <span class="bar-icon">↻</span>
+        <span class="bar-label">循环</span>
+      </div>
+      <div class="bar-btn-group" id="btnRead">
+        <span class="bar-icon">📖</span>
+        <span class="bar-label">精读</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function() {
+  var eps = [1, 2, 3, 4, 5, 6, 7];
+  var currentEp = 1;
+  var players = {}, videoSections = {}, listEls = {}, allCards = {}, activeCards = {};
+  eps.forEach(function(ep) {
+    players[ep] = document.getElementById('player' + ep);
+    videoSections[ep] = document.getElementById('videoSection' + ep);
+    listEls[ep] = document.getElementById('subtitleList' + ep);
+    allCards[ep] = document.querySelectorAll('#subtitleList' + ep + ' .sub-card');
+    activeCards[ep] = null;
+  });
+
+  var btnPlay = document.getElementById('btnPlayMain');
+  var btnBilingual = document.getElementById('btnBilingual');
+  var btnSpeedCycle = document.getElementById('btnSpeedCycle');
+  var btnLoop = document.getElementById('btnLoop');
+  var btnRead = document.getElementById('btnRead');
+
+  var isLooping = false;
+  var showCn = true;
+  var speeds = [0.75, 1, 1.25, 1.5];
+  var speedIdx = 1;
+
+  document.querySelectorAll('.ep-tab').forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      var ep = parseInt(tab.dataset.ep);
+      if (ep === currentEp) return;
+      players[currentEp].pause();
+      document.querySelectorAll('.ep-tab').forEach(function(t) { t.classList.remove('active'); });
+      tab.classList.add('active');
+      videoSections[currentEp].style.display = 'none';
+      listEls[currentEp].style.display = 'none';
+      videoSections[ep].style.display = '';
+      listEls[ep].style.display = '';
+      currentEp = ep;
+      updatePlayBtn();
+    });
+  });
+
+  function video() { return players[currentEp]; }
+  function updatePlayBtn() {
+    btnPlay.innerHTML = video().paused ? '&#9654;' : '&#9646;&#9646;';
+  }
+
+  eps.forEach(function(ep) {
+    allCards[ep].forEach(function(card) {
+      card.addEventListener('click', function() {
+        if (ep !== currentEp) return;
+        video().currentTime = parseFloat(card.dataset.start);
+        if (video().paused) video().play();
+      });
+    });
+  });
+
+  eps.forEach(function(ep) {
+    players[ep].addEventListener('timeupdate', function() {
+      if (ep !== currentEp) return;
+      var t = players[ep].currentTime;
+      var found = null;
+      allCards[ep].forEach(function(card) {
+        var s = parseFloat(card.dataset.start);
+        var e = parseFloat(card.dataset.end);
+        if (t >= s && t < e) found = card;
+      });
+
+      if (found !== activeCards[ep]) {
+        if (activeCards[ep]) activeCards[ep].classList.remove('active');
+        activeCards[ep] = found;
+        if (activeCards[ep]) {
+          activeCards[ep].classList.add('active');
+          var list = listEls[ep];
+          var cardTop = activeCards[ep].offsetTop - list.offsetTop;
+          var targetScroll = cardTop - list.clientHeight * 0.2;
+          list.scrollTo({ top: Math.max(0, targetScroll), behavior: 'smooth' });
+        }
+      }
+
+      if (isLooping && activeCards[ep]) {
+        var e2 = parseFloat(activeCards[ep].dataset.end);
+        var s2 = parseFloat(activeCards[ep].dataset.start);
+        if (players[ep].currentTime >= e2) players[ep].currentTime = s2;
+      }
+    });
+
+    players[ep].addEventListener('play', updatePlayBtn);
+    players[ep].addEventListener('pause', updatePlayBtn);
+    players[ep].addEventListener('ended', function() {
+      players[ep].currentTime = 0;
+      updatePlayBtn();
+    });
+  });
+
+  btnPlay.addEventListener('click', function() {
+    if (video().paused) video().play();
+    else video().pause();
+  });
+
+  btnBilingual.addEventListener('click', function() {
+    showCn = !showCn;
+    btnBilingual.classList.toggle('active', showCn);
+    document.querySelectorAll('.sub-cn').forEach(function(el) {
+      el.style.display = showCn ? '' : 'none';
+    });
+  });
+
+  btnSpeedCycle.addEventListener('click', function() {
+    speedIdx = (speedIdx + 1) % speeds.length;
+    eps.forEach(function(ep) { players[ep].playbackRate = speeds[speedIdx]; });
+    btnSpeedCycle.querySelector('.bar-icon').textContent = speeds[speedIdx] + 'x';
+    btnSpeedCycle.classList.toggle('active', speeds[speedIdx] !== 1);
+  });
+
+  btnLoop.addEventListener('click', function() {
+    isLooping = !isLooping;
+    btnLoop.classList.toggle('active', isLooping);
+  });
+
+  btnRead.addEventListener('click', function() {
+    window.location.href = 'episode' + currentEp + '.html';
+  });
+})();
+</script>
+</body>
+</html>

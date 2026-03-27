@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>EP1 用心做一顿饭 - 养成地道日语大脑</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #8B2252;
+      --accent: #2E6B4F;
+      --bg: #FDFAF7;
+      --card-bg: #FFFFFF;
+      --text: #2D2D2D;
+      --text-light: #6B7280;
+      --border: #E8E4DF;
+      --active-bg: #FFF8E1;
+      --active-border: #FFD54F;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-text-size-adjust: 100%;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Full-height flex layout */
+    .app {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      height: 100dvh;
+      padding-top: env(safe-area-inset-top);
+    }
+
+    /* Nav — fixed top */
+    .nav {
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 12px;
+      padding-left: calc(12px + env(safe-area-inset-left));
+      padding-right: calc(12px + env(safe-area-inset-right));
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 44px;
+      flex-shrink: 0;
+    }
+    .nav-back {
+      font-size: 0.85rem;
+      color: var(--text-light);
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+    .nav-title {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--text);
+      flex: 1;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding: 0 8px;
+    }
+    .nav-badge {
+      font-size: 0.7rem;
+      background: var(--primary);
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 12px;
+      flex-shrink: 0;
+    }
+
+    /* Video — fixed below nav */
+    .video-section {
+      flex-shrink: 0;
+      background: #000;
+      position: relative;
+    }
+    .video-section video {
+      width: 100%;
+      display: block;
+      max-height: 30vh;
+      object-fit: contain;
+      background: #000;
+    }
+    .video-slogan {
+      position: absolute;
+      bottom: 10px;
+      right: 12px;
+      color: rgba(255,255,255,0.85);
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+      pointer-events: none;
+    }
+
+    /* Subtitle list — ONLY this part scrolls */
+    .subtitle-list {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 8px 10px;
+      padding-left: calc(10px + env(safe-area-inset-left));
+      padding-right: calc(10px + env(safe-area-inset-right));
+    }
+    .subtitle-list-inner {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .sub-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .sub-card.active {
+      background: var(--active-bg);
+      border-color: var(--active-border);
+      box-shadow: 0 2px 12px rgba(255,213,79,0.25);
+    }
+
+    .sub-time {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 3px;
+    }
+    .sub-card.active .sub-time { color: #E65100; }
+
+    .sub-jp {
+      font-size: 1rem;
+      font-weight: 500;
+      line-height: 1.75;
+      margin-bottom: 3px;
+      word-break: break-word;
+    }
+    .sub-cn {
+      font-size: 0.85rem;
+      color: var(--text-light);
+      line-height: 1.5;
+    }
+
+    /* Keyword highlights */
+    .hl-pink { background: linear-gradient(180deg, transparent 60%, rgba(139,34,82,0.22) 60%); color: #8B2252; font-weight: 500; padding: 0 2px; }
+    .hl-green { background: linear-gradient(180deg, transparent 60%, rgba(46,107,79,0.22) 60%); color: #2E6B4F; font-weight: 500; padding: 0 2px; }
+    .hl-blue { background: linear-gradient(180deg, transparent 60%, rgba(37,99,165,0.22) 60%); color: #2563A5; font-weight: 500; padding: 0 2px; }
+    .hl-purple { background: linear-gradient(180deg, transparent 60%, rgba(126,58,183,0.22) 60%); color: #7E3AB7; font-weight: 500; padding: 0 2px; }
+    .hl-orange { background: linear-gradient(180deg, transparent 60%, rgba(194,120,3,0.22) 60%); color: #A16207; font-weight: 500; padding: 0 2px; }
+    .hl-teal { background: linear-gradient(180deg, transparent 60%, rgba(13,148,136,0.22) 60%); color: #0D9488; font-weight: 500; padding: 0 2px; }
+
+    /* Bottom control bar — fixed bottom */
+    .bottom-bar {
+      flex-shrink: 0;
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      padding: 8px 12px;
+      padding-bottom: calc(8px + env(safe-area-inset-bottom));
+    }
+    .bar-inner {
+      max-width: 700px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+    .bar-left, .bar-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-mode {
+      font-size: 0.75rem;
+      padding: 6px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-mode.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+    .btn-play-main {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: #4CAF50;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      font-size: 1.3rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 3px 12px rgba(76,175,80,0.4);
+      flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-speed-main {
+      font-size: 0.75rem;
+      padding: 6px 10px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text-light);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-speed-main.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    .btn-loop {
+      font-size: 0.75rem;
+      padding: 6px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-loop.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <div class="nav">
+    <a href="index.html" class="nav-back">← 返回</a>
+    <div class="nav-title">EP1 用心做一顿饭</div>
+    <span class="nav-badge">暮らし</span>
+  </div>
+
+  <div class="video-section">
+    <video id="player" preload="metadata" playsinline webkit-playsinline>
+      <source src="media/ep1_video.mp4" type="video/mp4">
+    </video>
+    <div class="video-slogan">跟着油管 每天无痛学日语</div>
+  </div>
+
+  <div class="subtitle-list" id="subtitleList">
+    <div class="subtitle-list-inner">
+
+      <div class="sub-card" data-start="0" data-end="8">
+        <div class="sub-time">0:00</div>
+        <div class="sub-jp">一本の映画を<span class="hl-pink">きっかけ</span>に、自らお肉を<span class="hl-green">摂取</span>しなくなってから、</div>
+        <div class="sub-cn">因为一部电影，自己就不再吃肉了，</div>
+      </div>
+
+      <div class="sub-card" data-start="8" data-end="14">
+        <div class="sub-time">0:08</div>
+        <div class="sub-jp"><span class="hl-blue">食事</span>は野菜や穀物中心になった。</div>
+        <div class="sub-cn">饮食就变成了以蔬菜和谷物为主。</div>
+      </div>
+
+      <div class="sub-card" data-start="14" data-end="22">
+        <div class="sub-time">0:14</div>
+        <div class="sub-jp">今日もYouTubeのレシピを<span class="hl-purple">参考に</span><span class="hl-blue">ヴィーガン</span>カレーを作ってみる。</div>
+        <div class="sub-cn">今天也参考 YouTube 上的食谱试着做个素食咖喱。</div>
+      </div>
+
+      <div class="sub-card" data-start="22" data-end="33">
+        <div class="sub-time">0:22</div>
+        <div class="sub-jp"><span class="hl-orange">八百屋</span>のおじさんに心配されるほどたくさん買った<span class="hl-green">きのこ</span>を使って、動物の<span class="hl-teal">犠牲</span>を伴わない、愛のこもったヘルシーレシピ。</div>
+        <div class="sub-cn">用蔬果店大叔都替我担心那么多的蘑菇，做一道不伤害动物的、充满爱的健康食谱。</div>
+      </div>
+
+      <div class="sub-card" data-start="33" data-end="42">
+        <div class="sub-time">0:33</div>
+        <div class="sub-jp">体は<span class="hl-green">食事で作られる</span>というように、多くの病気は<span class="hl-purple">食生活</span>との因果関係が証明されている。</div>
+        <div class="sub-cn">都说身体是饮食造就的，很多疾病都跟饮食习惯有因果关系。</div>
+      </div>
+
+      <div class="sub-card" data-start="42" data-end="47">
+        <div class="sub-time">0:42</div>
+        <div class="sub-jp">できるだけ<span class="hl-orange">添加物</span>も取りたくないから、</div>
+        <div class="sub-cn">因为尽量不想吃到添加剂，</div>
+      </div>
+
+      <div class="sub-card" data-start="47" data-end="52">
+        <div class="sub-time">0:47</div>
+        <div class="sub-jp"><span class="hl-teal">市販</span>のルーやレトルト食品は使わない。</div>
+        <div class="sub-cn">所以市面上卖的咖喱块和速食食品都不用。</div>
+      </div>
+
+      <div class="sub-card" data-start="52" data-end="60">
+        <div class="sub-time">0:52</div>
+        <div class="sub-jp">調味料も<span class="hl-green">可能な限り</span>シンプルなものを<span class="hl-pink">選ぶ</span>ようになった。</div>
+        <div class="sub-cn">调味料也尽量挑简单的来用了。</div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="bottom-bar">
+    <div class="bar-inner">
+      <div class="bar-left">
+        <button class="btn-mode active" id="btnBilingual">双语</button>
+        <button class="btn-speed-main active" id="btnSpeedCycle">1x</button>
+      </div>
+      <button class="btn-play-main" id="btnPlayMain">&#9654;</button>
+      <div class="bar-right">
+        <button class="btn-loop" id="btnLoop">循环</button>
+        <button class="btn-mode" id="btnRead">精读</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function() {
+  var video = document.getElementById('player');
+  var listEl = document.getElementById('subtitleList');
+  var cards = document.querySelectorAll('.sub-card');
+  var btnPlay = document.getElementById('btnPlayMain');
+  var btnBilingual = document.getElementById('btnBilingual');
+  var btnSpeedCycle = document.getElementById('btnSpeedCycle');
+  var btnLoop = document.getElementById('btnLoop');
+
+  var isLooping = false;
+  var speeds = [0.75, 1, 1.25, 1.5];
+  var speedIdx = 1;
+  var activeCard = null;
+
+  // Click card to seek
+  cards.forEach(function(card) {
+    card.addEventListener('click', function() {
+      video.currentTime = parseFloat(card.dataset.start);
+      if (video.paused) video.play();
+    });
+  });
+
+  // Time update — highlight & scroll within subtitle container only
+  video.addEventListener('timeupdate', function() {
+    var t = video.currentTime;
+    var found = null;
+    cards.forEach(function(card) {
+      var s = parseFloat(card.dataset.start);
+      var e = parseFloat(card.dataset.end);
+      if (t >= s && t < e) found = card;
+    });
+
+    if (found !== activeCard) {
+      if (activeCard) activeCard.classList.remove('active');
+      activeCard = found;
+      if (activeCard) {
+        activeCard.classList.add('active');
+        // Scroll only the subtitle container, not the whole page
+        var containerRect = listEl.getBoundingClientRect();
+        var cardRect = activeCard.getBoundingClientRect();
+        var offset = cardRect.top - containerRect.top - (containerRect.height / 2) + (cardRect.height / 2);
+        listEl.scrollBy({ top: offset, behavior: 'smooth' });
+      }
+    }
+  });
+
+  // Loop current sentence
+  video.addEventListener('timeupdate', function() {
+    if (!isLooping || !activeCard) return;
+    var e = parseFloat(activeCard.dataset.end);
+    var s = parseFloat(activeCard.dataset.start);
+    if (video.currentTime >= e) video.currentTime = s;
+  });
+
+  video.addEventListener('ended', function() {
+    video.currentTime = 0;
+    btnPlay.innerHTML = '&#9654;';
+  });
+
+  // Play/Pause
+  btnPlay.addEventListener('click', function() {
+    if (video.paused) video.play();
+    else video.pause();
+  });
+  video.addEventListener('play', function() { btnPlay.innerHTML = '&#9646;&#9646;'; });
+  video.addEventListener('pause', function() { btnPlay.innerHTML = '&#9654;'; });
+
+  // Bilingual
+  btnBilingual.addEventListener('click', function() {
+    btnBilingual.classList.toggle('active');
+    var show = btnBilingual.classList.contains('active');
+    document.querySelectorAll('.sub-cn').forEach(function(el) {
+      el.style.display = show ? '' : 'none';
+    });
+  });
+
+  // Speed
+  btnSpeedCycle.addEventListener('click', function() {
+    speedIdx = (speedIdx + 1) % speeds.length;
+    video.playbackRate = speeds[speedIdx];
+    btnSpeedCycle.textContent = speeds[speedIdx] + 'x';
+  });
+
+  // Loop
+  btnLoop.addEventListener('click', function() {
+    isLooping = !isLooping;
+    btnLoop.classList.toggle('active', isLooping);
+  });
+
+  // 精读
+  document.getElementById('btnRead').addEventListener('click', function() {
+    window.location.href = 'episode1.html';
+  });
+})();
+</script>
+</body>
+</html>

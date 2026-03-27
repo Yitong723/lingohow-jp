@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>字幕打点工具</title>
+<style>
+  body { font-family: sans-serif; max-width: 900px; margin: 20px auto; padding: 0 20px; background: #f5f5f5; }
+  h2 { margin: 20px 0 10px; }
+  .tabs { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+  .tabs button { padding: 8px 20px; border: 1px solid #ccc; background: #fff; border-radius: 6px; cursor: pointer; font-size: 14px; position: relative; }
+  .tabs button.active { background: #8B2252; color: #fff; border-color: #8B2252; }
+  .tabs button .badge { position: absolute; top: -6px; right: -6px; background: #4CAF50; color: #fff; font-size: 10px; padding: 1px 5px; border-radius: 8px; }
+  .tabs button .badge.partial { background: #FF9800; }
+  video { width: 100%; border-radius: 8px; background: #000; }
+  .instructions { background: #fff3cd; padding: 12px; border-radius: 8px; margin: 10px 0; font-size: 14px; line-height: 1.6; }
+  .instructions b { color: #8B2252; }
+  .btn-row { display: flex; gap: 8px; margin: 10px 0; flex-wrap: wrap; }
+  .btn-row button { padding: 8px 16px; border-radius: 6px; border: 1px solid #ccc; background: #fff; cursor: pointer; font-size: 13px; }
+  .btn-row button:hover { background: #f0f0f0; }
+  .btn-row button:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-row button:disabled:hover { background: #fff; }
+  .btn-reopen { background: #FF9800 !important; color: #fff !important; border-color: #FF9800 !important; font-weight: bold; }
+  .btn-reopen:hover { background: #F57C00 !important; }
+  #counter { font-size: 18px; font-weight: bold; color: #8B2252; margin: 10px 0; }
+
+  .sentence-list { margin: 10px 0; }
+  .sent-row {
+    display: flex; align-items: flex-start; gap: 10px; padding: 8px 12px;
+    background: #fff; border: 1px solid #e0e0e0; border-radius: 6px; margin-bottom: 4px;
+    font-size: 13px; line-height: 1.6; transition: all 0.2s;
+  }
+  .sent-row.done { background: #e8f5e9; border-color: #a5d6a7; }
+  .sent-row.current { background: #fff8e1; border-color: #ffe082; box-shadow: 0 0 0 2px #ffd54f; }
+  .sent-row.future { opacity: 0.5; }
+  .sent-num { font-weight: bold; color: #8B2252; min-width: 28px; flex-shrink: 0; }
+  .sent-time { font-family: monospace; color: #666; min-width: 100px; flex-shrink: 0; font-size: 12px; }
+  .sent-text { flex: 1; }
+  .sent-jp { font-weight: 500; }
+  .sent-cn { color: #888; font-size: 12px; }
+
+  .locked-banner { background: #e8f5e9; border: 2px solid #4CAF50; border-radius: 8px; padding: 14px 18px; margin: 10px 0; display: flex; align-items: center; justify-content: space-between; }
+  .locked-banner .locked-text { font-size: 15px; font-weight: bold; color: #2e7d32; }
+  .locked-banner .locked-sub { font-size: 12px; color: #666; margin-top: 2px; }
+
+  .status-bar { background: #e8f5e9; padding: 10px 14px; border-radius: 8px; margin: 10px 0; font-size: 14px; color: #2e7d32; display: none; }
+</style>
+</head>
+<body>
+  <h2>字幕打点工具</h2>
+  <div class="instructions">
+    <b>使用方法：</b><br>
+    1. 选择 EP → 自动加载该 EP 的字幕文本和视频<br>
+    2. 点击播放视频<br>
+    3. 每当一句新字幕开始时，按 <b>空格键</b> 打点（自动匹配到下一句）<br>
+    4. 按 <b>Z 键</b> 撤销上一个打点<br>
+    5. 进度自动保存到浏览器本地，<b>刷新页面或关闭浏览器都不会丢失</b>
+  </div>
+
+  <div class="tabs" id="epTabs"></div>
+
+  <video id="player" controls playsinline>
+    <source id="videoSrc" src="" type="video/mp4">
+  </video>
+
+  <div id="counter">已打 0 / 0 个点</div>
+
+  <div id="lockedBanner" class="locked-banner" style="display:none;">
+    <div>
+      <div class="locked-text">已完成打点</div>
+      <div class="locked-sub">数据已锁定，解锁后可撤销/调整，不影响其他EP</div>
+    </div>
+    <button class="btn-reopen" onclick="unlockEp()">解锁编辑</button>
+  </div>
+
+  <div class="btn-row" id="editButtons">
+    <button id="btnMark" onclick="markTime()">打点 (空格)</button>
+    <button id="btnUndo" onclick="undoLast()">撤销 (Z)</button>
+    <button id="btnClear" onclick="clearAll()">清空本EP</button>
+  </div>
+
+  <div class="sentence-list" id="sentenceList"></div>
+  <div class="status-bar" id="statusBar"></div>
+
+  <script>
+    // ===== EP 配置 =====
+    var epConfig = {
+      1: {
+        title: 'EP1 纯素咖喱',
+        video: 'media/ep1_video.mp4',
+        file: 'ep1.json',
+        sentences: [
+          { jp: '一本の映画をきっかけに、自らお肉を摂取しなくなってから、', cn: '因为一部电影，自己就不再吃肉了，' },
+          { jp: '食事は野菜や穀物中心になった。', cn: '饮食就变成了以蔬菜和谷物为主。' },
+          { jp: '今日もYouTubeのレシピを参考にヴィーガンカレーを作ってみる。', cn: '今天也参考 YouTube 上的食谱试着做个素食咖喱。' },
+          { jp: '八百屋のおじさんに心配されるほどたくさん買ったきのこを使って、動物の犠牲を伴わない、愛のこもったヘルシーレシピ。', cn: '用蔬果店大叔都替我担心那么多的蘑菇，做一道不伤害动物的、充满爱的健康食谱。' },
+          { jp: '体は食事で作られるというように、多くの病気は食生活との因果関係が証明されている。', cn: '都说身体是饮食造就的，很多疾病都跟饮食习惯有因果关系。' },
+          { jp: 'できるだけ添加物も取りたくないから、', cn: '因为尽量不想吃到添加剂，' },
+          { jp: '市販のルーやレトルト食品は使わない。', cn: '所以市面上卖的咖喱块和速食食品都不用。' },
+          { jp: '調味料も可能な限りシンプルなものを選ぶようになった。', cn: '调味料也尽量挑简单的来用了。' }
+        ]
+      },
+      2: {
+        title: 'EP2 微波炉食谱',
+        video: 'media/ep2_video.mp4',
+        file: 'ep2.json',
+        sentences: [
+          { jp: '1週間のレンジ生活いってみよう！', cn: '微波炉一周生活，开始啦！' },
+          { jp: '買い物前に冷蔵庫をチェックします。', cn: '买东西之前先看看冰箱里有什么。' },
+          { jp: '生姜とキャベツがありました。あと玉ねぎもありました。', cn: '有生姜和卷心菜，洋葱也有。' },
+          { jp: '冷凍庫にはひき肉と豚こま肉がありました。', cn: '冷冻柜里有肉末和猪肉片。' },
+          { jp: '今週はレンジレシピをまとめてみました。', cn: '这周整理了微波炉食谱合集。' },
+          { jp: '全部美味しすぎて幸せ1週間だったので、最後まで見てね。', cn: '全都超好吃，幸福的一周，所以请看到最后哦。' },
+          { jp: 'さあ、買い物に行ってきます！', cn: '好，去买菜啦！' },
+          { jp: 'いつものお店にやってきました。', cn: '来到了常去的店。' },
+          { jp: 'この日は充実してて超得した気分でした。', cn: '这天东西很全，感觉超赚。' },
+          { jp: 'まずはトマトをゲット、やった！', cn: '先拿到番茄了，太好了！' },
+          { jp: '白菜も40円でゲット。そしてりんごと柿も安くなってた。', cn: '白菜 40 日元也拿到了。苹果和柿子也便宜了。' },
+          { jp: '節約してるとフルーツまで手が出せないからありがたい。', cn: '省着花的话水果都买不起，能便宜真的很感谢。' },
+          { jp: 'ネギも半額のがあったらそっち取っちゃうよね。', cn: '葱要是有半价的肯定拿那个嘛。' },
+          { jp: '合計金額は1978円でした。', cn: '总共花了 1978 日元。' },
+          { jp: '合計1978円で、1週間2000円生活スタートです！', cn: '总共 1978 日元，一周 2000 日元生活开始！' },
+          { jp: '1日目。夜ご飯は肉豆腐を作ります。', cn: '第一天，晚饭做肉豆腐。' }
+        ]
+      },
+      3: {
+        title: 'EP3 年度爱用好物来画个日常妆',
+        video: 'media/ep3_video.mp4',
+        file: 'ep3.json',
+        sentences: [
+          { jp: 'こんにちは、始まりました、ミキぽんチャンネルです。', cn: '嗨大家好，这里是Mikipon频道。' },
+          { jp: '今回は前回紹介した2016年のマイベストコスメを使った毎日メイクを紹介します。', cn: '今天要用上次介绍的2016年度爱用好物来画一个日常妆。' },
+          { jp: 'それではミキぽんチャンネル、始まるよ！', cn: '那我们开始吧！' },
+          { jp: 'まず保湿をしっかりとした後に、こちらのSK-IIのミストタイプを顔全体に吹きかけます。', cn: '先做好保湿，然后把这款SK-II的喷雾喷在整张脸上。' },
+          { jp: 'そしてティッシュでこのように拭き取って、顔がベタベタしないか、余分な皮脂がないか確かめてから、', cn: '再用纸巾这样按压一下，确认脸上不会黏黏的，也没有多余的油脂。' },
+          { jp: 'こちらのポール&ジョーのポアスムージングプライマーの01番。', cn: '接下来是这支PAUL & JOE的毛孔修饰妆前乳01号。' },
+          { jp: 'これはとてもさらっとしたテクスチャーで、毛穴の気になる凹凸を隠してくれる効果があります。', cn: '它的质地非常清爽，能帮你把毛孔那些不平整的地方遮住。' },
+          { jp: 'これを顔全体に塗っていきます。', cn: '把它涂满整张脸。' },
+          { jp: 'そして次にシュウウエムラのこちらの下地を手の甲に出してから、顔全体に指で塗っていきます。', cn: '然后取这支植村秀的隔离，先挤在手背上，再用手指涂到全脸。' },
+          { jp: 'これは小さなパールが入っていて、肌を少しツヤっぽく見せてくれます。', cn: '这里面有细闪珠光，能让皮肤看起来带一点光泽感。' },
+          { jp: '次にこちらのカバーマークのファンデーションを塗っていきます。', cn: '接下来上这瓶COVERMARK的粉底液。' },
+          { jp: 'これは少量でもかなり伸びが良くて、薄付きなのにとてもカバー力があって、', cn: '这款只要一点点就特别好推开，薄薄一层遮瑕力就很强。' },
+          { jp: '私はこのファンデーションに変えてからメイク時間がかなり短縮されました。', cn: '自从换了这瓶粉底之后，我化妆的时间缩短了好多。' },
+          { jp: '使うたびにこれにしてよかったなと感謝してしまうファンデーションです。', cn: '每次用都会觉得"还好当初换了这瓶"，真的很感谢这款粉底。' }
+        ]
+      },
+      4: {
+        title: 'EP4 学到睡觉为止的学习直播日常',
+        video: 'media/ep4_video.mp4',
+        file: 'ep4.json',
+        sentences: [
+          { jp: 'はい、色々用事が片付きましたら、あとはもう寝るまで勉強をするということで、勉強配信をしていきます。', cn: '好，杂事都处理完了，接下来就是学到睡觉为止，所以开始学习直播啦。' },
+          { jp: 'いつも勉強配信に参加してくださっている方、ありがとうございます。', cn: '每次都来参加学习直播的朋友们，谢谢你们。' },
+          { jp: 'とっても励みになっております。', cn: '真的给了我很大的动力。' },
+          { jp: '私の現状のライティングの勉強方法なんですけれども、', cn: '说说我目前写作练习的学习方法吧。' },
+          { jp: '調べたところ、タイピングで英作文を打っていくよりも、まず手書きでノートに書いていった方が、記憶の定着率は高いらしいので、', cn: '我查了一下发现，比起用键盘打英语作文，先用手写在笔记本上，记忆的留存率好像更高。' },
+          { jp: 'まずは正しい例文を3回ぐらい、がーっと手書きで書いちゃって、', cn: '所以我就先把正确的例句手抄大概三遍，一口气写完。' },
+          { jp: '一応ぼんやりその型と言いますかパターンを覚えまして、', cn: '先大致记住那个句型，或者说套路吧。' },
+          { jp: 'だいたい覚えたかなっていうぐらいになると、最後にタイピングで日本語から英文に訳していくという感じで練習をしています。', cn: '等差不多记住了，最后再用键盘把日语翻译成英文，就这样练习。' },
+          { jp: 'もちろんノートに3回書いたからって100%覚えているわけではないので、タイピングも時間がかかって苦労します。', cn: '当然了，抄三遍也不可能百分之百记住，所以打字的时候还是挺费劲的。' }
+        ]
+      },
+      5: {
+        title: 'EP5 大学生的一天：上课和课后咖啡时光',
+        video: 'media/ep5_video.mp4',
+        file: 'ep5.json',
+        sentences: [
+          { jp: '準備ができました！行ってきまーす、レッツゴー！', cn: '准备好了！出发啦，let\'s go！' },
+          { jp: '今日はめっちゃ天気がいいですね。バス停まで歩いて向かいます。', cn: '今天天气超好的呢。走着去公交站。' },
+          { jp: '教室に到着しました！', cn: '到教室啦！' },
+          { jp: 'これは私の大好きな梅シートです。', cn: '这是我超爱的梅片。' },
+          { jp: '授業、ファイティン！', cn: '上课，加油！' },
+          { jp: 'この授業は、sustainable tourismといって、観光系の授業で、今日が最後の授業でした。', cn: '这门课叫sustainable tourism，是观光类的课，今天是最后一节了。' },
+          { jp: '課題する時間をたっぷりくれて、たくさん質問できました。', cn: '老师给了充足的时间做作业，还问了好多问题。' },
+          { jp: '先生がラミントンというケーキを買ってきてくれて、みんなで食べました。すごくおいしかったです。', cn: '老师买了一种叫lamington的蛋糕，大家一起吃了。超好吃的。' },
+          { jp: '私は今帰っているのではなく、とあるところに向かっています！さあ、どこに向かっているでしょう？', cn: '我现在不是回家哦，而是去一个地方！猜猜看，去哪儿呢？' },
+          { jp: '正解はスタバでした。タンブラーが可愛すぎる。', cn: '答案是星巴克。水杯也太可爱了吧。' },
+          { jp: 'オーストラリアのスタバはフードが充実しているように感じます。', cn: '感觉澳洲的星巴克食物种类特别丰富。' },
+          { jp: '私は最近ハマっているiced white choc mochaにしました。', cn: '我点了最近迷上的iced white choc mocha。' }
+        ]
+      },
+      6: {
+        title: 'EP6 富山探店：世界最美星巴克与尼泊尔咖喱',
+        video: 'media/ep6_video.mp4',
+        file: 'ep6.json',
+        sentences: [
+          { jp: 'さて、次の日はまずこちらへ行きました。', cn: '第二天呢，先去了这个地方。' },
+          { jp: 'このスターバックスは、「世界で1番美しいスターバックス」と言われているそうです。', cn: '据说这家星巴克号称"世界上最美的星巴克"。' },
+          { jp: 'あいにくこの日は雨だったけど、天気が良い春の日はこんな景色が見られるそう。', cn: '可惜当天下雨了，不过听说天气好的春天能看到这样的景色。' },
+          { jp: '店内もとてもオシャレでした！', cn: '店里也超时髦的！' },
+          { jp: 'ちなみにスターバックスのことを日本人は「スタバ」って呼んでいるのを知っていましたか？', cn: '话说回来，你知道日本人把星巴克叫"スタバ"吗？' },
+          { jp: 'カフェラテを飲んだあとは、少しドライブして、おしゃれな建物があったので入ってみました♪', cn: '喝完拿铁之后又开了一会儿车，看到一栋挺有格调的楼就进去逛了逛♪' },
+          { jp: 'このネパールカレーを注文したんですけど、辛さレベルを2にしてしまって、とんでもなく辛かったです。', cn: '点了这份尼泊尔咖喱，结果手一滑选了辣度2，辣得要命。' },
+          { jp: '口から火が出そうになりつつ、街を歩いていたら、こんな感じで路面電車が走っていました！', cn: '嘴巴都快喷火了，一边在街上走着，就看到路面电车在跑！' },
+          { jp: '富山市はバスも電車も路面電車も走っているので便利ですね♪', cn: '富山市公交、电车、路面电车都有，出行还挺方便的♪' }
+        ]
+      },
+      7: {
+        title: 'EP7 坐电车去长野：基础旅行日语入门',
+        video: 'media/ep7_video.mp4',
+        file: 'ep7.json',
+        sentences: [
+          { jp: 'みなさん、こんにちは！今回は、長野旅行について話します。', cn: '大家好！这次来聊聊去长野的旅行。' },
+          { jp: '名古屋から長野まで、電車で行きました。', cn: '从名古屋到长野，坐的电车去的。' },
+          { jp: '朝6時50分に、名古屋駅に着きました。', cn: '早上六点五十到了名古屋站。' },
+          { jp: '朝7時出発の電車だったので今日は早起きしました。', cn: '因为是早上七点发车的电车，所以今天起了个大早。' },
+          { jp: '電車に乗って、いよいよ出発です。', cn: '上了电车，终于要出发啦。' },
+          { jp: '今回わたしは「特急しなの」に乗りました。', cn: '这次我坐的是"特急信浓号"。' },
+          { jp: '特急しなのは、名古屋から長野まで行く速い電車です。', cn: '特急信浓号是从名古屋到长野的快速列车。' },
+          { jp: '名古屋から長野まで約3時間かかります。', cn: '从名古屋到长野大概要三个小时。' },
+          { jp: 'きっぷは指定席で9,440円です。', cn: '对号入座的票价是九千四百四十日元。' },
+          { jp: 'ちょっと高いですが、はやくて便利です。', cn: '虽然有点贵，但是又快又方便。' },
+          { jp: '電車の中はきれいでした。', cn: '车厢里很干净。' },
+          { jp: '席も広かったです。', cn: '座位也很宽敞。' },
+          { jp: 'まどから山が見えました。', cn: '从窗户能看到山。' }
+        ]
+      }
+    };
+
+    var player = document.getElementById('player');
+    var marks = [];
+    var currentEp = 1;
+    var locked = false;
+    var STORAGE_KEY = 'jp_timestamp_tool_marks';
+
+    // ===== localStorage 持久化 =====
+    function loadAllMarks() {
+      try {
+        var saved = localStorage.getItem(STORAGE_KEY);
+        return saved ? JSON.parse(saved) : {};
+      } catch (e) { return {}; }
+    }
+
+    function saveMarks() {
+      var all = loadAllMarks();
+      all[currentEp] = marks;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+      saveSubtitleData();
+      updateTabBadges();
+      showAutoSaveHint();
+      // 打完自动锁定
+      if (marks.length >= epConfig[currentEp].sentences.length) {
+        locked = true;
+        updateLockUI();
+      }
+    }
+
+    var SUBTITLE_KEY = 'jp_timestamp_tool_subtitles';
+    function saveSubtitleData() {
+      var sents = epConfig[currentEp].sentences;
+      if (marks.length === 0) {
+        try {
+          var allSubs = JSON.parse(localStorage.getItem(SUBTITLE_KEY) || '{}');
+          delete allSubs[currentEp];
+          localStorage.setItem(SUBTITLE_KEY, JSON.stringify(allSubs));
+        } catch(e) {}
+        return;
+      }
+      var subtitles = [];
+      for (var i = 0; i < marks.length; i++) {
+        var start = parseFloat(marks[i].toFixed(1));
+        var end = (i < marks.length - 1) ? parseFloat(marks[i + 1].toFixed(1)) : parseFloat((marks[i] + 10).toFixed(1));
+        subtitles.push({ start: start, end: end, jp: sents[i].jp, cn: sents[i].cn });
+      }
+      try {
+        var allSubs = JSON.parse(localStorage.getItem(SUBTITLE_KEY) || '{}');
+        allSubs[currentEp] = { title: epConfig[currentEp].title, subtitles: subtitles };
+        localStorage.setItem(SUBTITLE_KEY, JSON.stringify(allSubs));
+      } catch(e) {}
+    }
+
+    function loadMarksForEp(ep) {
+      var all = loadAllMarks();
+      return all[ep] || [];
+    }
+
+    function clearMarksForEp(ep) {
+      var all = loadAllMarks();
+      delete all[ep];
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+      updateTabBadges();
+    }
+
+    // ===== 锁定/解锁 UI =====
+    function isEpComplete(ep) {
+      var saved = loadMarksForEp(ep);
+      return saved.length >= epConfig[ep].sentences.length;
+    }
+
+    function updateLockUI() {
+      var banner = document.getElementById('lockedBanner');
+      if (locked) {
+        banner.style.display = 'flex';
+        document.getElementById('btnMark').disabled = true;
+        document.getElementById('btnUndo').disabled = true;
+        document.getElementById('btnClear').disabled = true;
+      } else {
+        banner.style.display = 'none';
+        document.getElementById('btnMark').disabled = false;
+        document.getElementById('btnUndo').disabled = false;
+        document.getElementById('btnClear').disabled = false;
+      }
+    }
+
+    function unlockEp() {
+      if (!confirm('确定要解锁 EP' + currentEp + ' 进行编辑吗？\n（数据不会清空，可以撤销/调整）')) return;
+      locked = false;
+      updateLockUI();
+      render();
+    }
+
+    // ===== 自动保存提示 =====
+    var saveHintTimer = null;
+    function showAutoSaveHint() {
+      var bar = document.getElementById('statusBar');
+      bar.className = 'status-bar';
+      bar.innerHTML = '已自动保存 (' + new Date().toLocaleTimeString() + ')';
+      bar.style.display = 'block';
+      clearTimeout(saveHintTimer);
+      saveHintTimer = setTimeout(function() { bar.style.display = 'none'; }, 2000);
+    }
+
+    // ===== Tab 徽标 =====
+    function updateTabBadges() {
+      var all = loadAllMarks();
+      var buttons = document.getElementById('epTabs').querySelectorAll('button');
+      buttons.forEach(function(btn, i) {
+        var ep = i + 1;
+        var saved = all[ep] || [];
+        var total = epConfig[ep].sentences.length;
+        var existing = btn.querySelector('.badge');
+        if (existing) existing.remove();
+        if (saved.length > 0) {
+          var badge = document.createElement('span');
+          badge.className = saved.length >= total ? 'badge' : 'badge partial';
+          badge.textContent = saved.length + '/' + total;
+          btn.appendChild(badge);
+        }
+      });
+    }
+
+    // 动态生成 tabs
+    var tabsEl = document.getElementById('epTabs');
+    Object.keys(epConfig).forEach(function(epId) {
+      var btn = document.createElement('button');
+      btn.textContent = epConfig[epId].title;
+      btn.className = parseInt(epId) === 1 ? 'active' : '';
+      btn.addEventListener('click', function() {
+        var targetEp = parseInt(epId);
+        if (targetEp === currentEp) return;
+        var sents = epConfig[currentEp].sentences;
+        if (!locked && marks.length > 0 && marks.length < sents.length) {
+          if (!confirm('EP' + currentEp + ' 还有 ' + (sents.length - marks.length) + ' 句未打点，确定切换吗？\n（进度已自动保存，切回来可继续）')) return;
+        }
+        switchEp(targetEp);
+      });
+      tabsEl.appendChild(btn);
+    });
+
+    function switchEp(ep) {
+      currentEp = ep;
+      tabsEl.querySelectorAll('button').forEach(function(b, i) {
+        b.classList.toggle('active', i === ep - 1);
+      });
+      player.pause();
+      document.getElementById('videoSrc').src = epConfig[ep].video;
+      player.load();
+      marks = loadMarksForEp(ep);
+      locked = isEpComplete(ep);
+      updateLockUI();
+      render();
+    }
+
+    function stripHtml(html) {
+      var tmp = document.createElement('span');
+      tmp.innerHTML = html;
+      return tmp.textContent;
+    }
+
+    function markTime() {
+      if (locked) return;
+      var sents = epConfig[currentEp].sentences;
+      if (marks.length >= sents.length) return;
+      marks.push(player.currentTime);
+      saveMarks();
+      render();
+      var currentRow = document.querySelector('.sent-row.current');
+      if (currentRow) currentRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function undoLast() {
+      if (locked) return;
+      if (marks.length === 0) return;
+      marks.pop();
+      saveMarks();
+      render();
+    }
+
+    function clearAll() {
+      if (locked) return;
+      if (marks.length === 0) return;
+      if (!confirm('确定清空 EP' + currentEp + ' 的所有打点数据吗？')) return;
+      marks = [];
+      clearMarksForEp(currentEp);
+      render();
+    }
+
+    function render() {
+      var sents = epConfig[currentEp].sentences;
+      var total = sents.length;
+      var done = marks.length;
+
+      var statusText = '已打 ' + done + ' / ' + total + ' 个点';
+      if (locked) statusText += ' ✅ 已完成（已锁定）';
+      else if (done >= total) statusText += ' ✅ 已完成';
+      document.getElementById('counter').textContent = statusText;
+
+      var html = '';
+      for (var i = 0; i < total; i++) {
+        var cls = 'sent-row';
+        var timeStr = '';
+        if (i < done) {
+          cls += ' done';
+          var start = marks[i].toFixed(1);
+          var end = (i < done - 1) ? marks[i + 1].toFixed(1) : (i === total - 1 ? '末尾' : '...');
+          timeStr = start + ' → ' + end;
+        } else if (i === done && !locked) {
+          cls += ' current';
+          timeStr = '⏎ 下一个打点';
+        } else {
+          cls += ' future';
+        }
+        html += '<div class="' + cls + '">' +
+          '<div class="sent-num">' + (i + 1) + '</div>' +
+          '<div class="sent-time">' + timeStr + '</div>' +
+          '<div class="sent-text"><div class="sent-jp">' + stripHtml(sents[i].jp) + '</div>' +
+          '<div class="sent-cn">' + sents[i].cn + '</div></div></div>';
+      }
+      document.getElementById('sentenceList').innerHTML = html;
+    }
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+      if (locked) return;
+      if (e.code === 'Space' && document.activeElement.tagName !== 'BUTTON' && document.activeElement.tagName !== 'INPUT') {
+        e.preventDefault();
+        markTime();
+      }
+      if (e.code === 'KeyZ' && !e.metaKey && !e.ctrlKey) {
+        undoLast();
+      }
+    });
+
+    // 初始渲染
+    switchEp(1);
+    updateTabBadges();
+  </script>
+</body>
+</html>
