@@ -12,7 +12,7 @@
     { "source": "/episode9", "destination": "/episode9.html" },
     { "source": "/episode10", "destination": "/episode10.html" },
     { "source": "/timestamp-tool", "destination": "/timestamp_tool.html" },
-    { "source": "/recording", "destination": "/日语录屏版.html" },
-    { "source": "/mobile-reading", "destination": "/手机跟读版.html" }
+    { "source": "/recording", "destination": "/recording.html" },
+    { "source": "/mobile-reading", "destination": "/mobile-reading.html" }
   ]
 }
