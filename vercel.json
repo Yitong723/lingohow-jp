@@ -1,0 +1,16 @@
+{
+  "outputDirectory": "website",
+  "rewrites": [
+    { "source": "/episode1", "destination": "/episode1.html" },
+    { "source": "/episode2", "destination": "/episode2.html" },
+    { "source": "/episode3", "destination": "/episode3.html" },
+    { "source": "/episode4", "destination": "/episode4.html" },
+    { "source": "/episode5", "destination": "/episode5.html" },
+    { "source": "/episode6", "destination": "/episode6.html" },
+    { "source": "/episode7", "destination": "/episode7.html" },
+    { "source": "/episode8", "destination": "/episode8.html" },
+    { "source": "/episode9", "destination": "/episode9.html" },
+    { "source": "/episode10", "destination": "/episode10.html" },
+    { "source": "/timestamp-tool", "destination": "/timestamp_tool.html" }
+  ]
+}
