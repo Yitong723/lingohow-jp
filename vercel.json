@@ -12,6 +12,11 @@
     { "source": "/episode9", "destination": "/episode9.html" },
     { "source": "/episode10", "destination": "/episode10.html" },
     { "source": "/episode11", "destination": "/episode11.html" },
+    { "source": "/episode12", "destination": "/episode12.html" },
+    { "source": "/episode13", "destination": "/episode13.html" },
+    { "source": "/episode14", "destination": "/episode14.html" },
+    { "source": "/episode15", "destination": "/episode15.html" },
+    { "source": "/episode16", "destination": "/episode16.html" },
     { "source": "/timestamp-tool", "destination": "/timestamp_tool.html" },
     { "source": "/recording", "destination": "/recording.html" },
     { "source": "/mobile-reading", "destination": "/mobile-reading.html" }
