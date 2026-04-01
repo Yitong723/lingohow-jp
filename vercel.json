@@ -11,6 +11,7 @@
     { "source": "/episode8", "destination": "/episode8.html" },
     { "source": "/episode9", "destination": "/episode9.html" },
     { "source": "/episode10", "destination": "/episode10.html" },
+    { "source": "/episode11", "destination": "/episode11.html" },
     { "source": "/timestamp-tool", "destination": "/timestamp_tool.html" },
     { "source": "/recording", "destination": "/recording.html" },
     { "source": "/mobile-reading", "destination": "/mobile-reading.html" }
