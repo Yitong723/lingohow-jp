@@ -361,11 +361,13 @@ a {
 
 .text-block.japanese {
   font-size: 1.05rem;
+  font-weight: 600;
 }
 
 .text-block.chinese {
-  color: var(--text-light);
+  color: var(--text);
   font-size: 0.95rem;
+  font-weight: 600;
 }
 
 .text-block .highlight {
@@ -638,7 +640,8 @@ a {
 
 .sentence-item .cn {
   font-size: 0.85rem;
-  color: var(--text-light);
+  color: var(--text);
+  font-weight: 500;
 }
 
 /* 句子音频控制 */
