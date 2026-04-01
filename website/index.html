@@ -570,11 +570,10 @@
           '<div class="card-thumb">' +
             '<img class="ep-cover" src="' + l.cover + '" alt="' + l.title + '">' +
             '<div class="card-stars">' + starsHTML(l.difficulty, 5) + '</div>' +
-            '<span class="ep-number">' + l.number + '</span>' +
           '</div>' +
           '<div class="card-body">' +
             '<div class="card-tags-row">' + tags + '</div>' +
-            '<h3>' + l.title + '</h3>' +
+            '<h3>EP' + l.number + ' ' + l.title + '</h3>' +
             '<p class="card-desc">' + l.desc + '</p>' +
             '<div class="card-vocab-label">📝 本期核心词汇</div>' +
             '<div class="card-vocab">' + vocabs + '</div>' +
@@ -596,7 +595,7 @@
           '<div class="list-icon"><img src="' + l.cover + '" style="width:100%;height:100%;object-fit:cover;border-radius:12px;" alt=""></div>' +
           '<div class="list-body">' +
             '<div class="list-title-row">' +
-              '<h3>' + l.title + '</h3>' +
+              '<h3>EP' + l.number + ' ' + l.title + '</h3>' +
               '<div class="list-stars">' + starsHTML(l.difficulty, 5) + '</div>' +
             '</div>' +
             '<p class="list-desc">' + l.desc + '</p>' +
