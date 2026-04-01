@@ -504,6 +504,29 @@
       }
     });
 
+    // 页面加载时，用最新的epConfig句子（含高亮标签）刷新所有已有打点的字幕数据
+    (function refreshAllSubtitles() {
+      var allMarks = loadAllMarks();
+      var allSubs = {};
+      try { allSubs = JSON.parse(localStorage.getItem(SUBTITLE_KEY) || '{}'); } catch(e) {}
+      var changed = false;
+      Object.keys(allMarks).forEach(function(epId) {
+        var ep = parseInt(epId);
+        var epMarks = allMarks[ep];
+        if (!epConfig[ep] || !epMarks || epMarks.length === 0) return;
+        var sents = epConfig[ep].sentences;
+        var subtitles = [];
+        for (var i = 0; i < epMarks.length && i < sents.length; i++) {
+          var start = parseFloat(epMarks[i].toFixed(1));
+          var end = (i < epMarks.length - 1) ? parseFloat(epMarks[i + 1].toFixed(1)) : parseFloat((epMarks[i] + 10).toFixed(1));
+          subtitles.push({ start: start, end: end, jp: sents[i].jp, cn: sents[i].cn });
+        }
+        allSubs[ep] = { title: epConfig[ep].title, subtitles: subtitles };
+        changed = true;
+      });
+      if (changed) localStorage.setItem(SUBTITLE_KEY, JSON.stringify(allSubs));
+    })();
+
     // 初始渲染
     switchEp(1);
     updateTabBadges();
