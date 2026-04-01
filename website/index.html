@@ -1,285 +1,662 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="zh">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>养成地道日语大脑</title>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;800&family=Noto+Sans+SC:wght@300;400;500;700;800&display=swap">
+  <style>
+    :root {
+      --bg: #F7F8FC;
+      --card: #FFFFFF;
+      --text: #1a1a2e;
+      --text-secondary: #4B5563;
+      --text-muted: #9CA3AF;
+      --border: #E5E7EB;
+      --primary: #8B2252;
+      --primary-light: #FDF2F8;
+      --radius: 16px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 16px rgba(0,0,0,0.06);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Noto Sans SC', 'Noto Sans JP', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { text-decoration: none; color: inherit; }
+
+    .nav {
+      background: white; border-bottom: 1px solid #EEEEF0;
+      position: sticky; top: 0; z-index: 50;
+    }
+    .nav-inner {
+      max-width: 1300px; margin: 0 auto; padding: 0 24px;
+      height: 52px; display: flex; align-items: center; gap: 10px;
+    }
+    .nav-flag { font-size: 18px; }
+    .nav-title { font-weight: 700; font-size: 15px; color: var(--text); }
+
+    .hero {
+      background: linear-gradient(180deg, #FFF8F2 0%, #F7F8FC 100%);
+      padding: 48px 20px 36px; text-align: center;
+    }
+    .hero-sub {
+      font-size: 0.9rem; color: #8B2252; letter-spacing: 2px;
+      margin-bottom: 12px;
+    }
+    .hero h1 {
+      font-size: 2.2rem; font-weight: 800; color: #4A1030;
+      margin-bottom: 16px;
+    }
+    .hero .desc {
+      font-size: 1rem; color: #6B7280; margin-bottom: 24px;
+    }
+    .hero .desc strong { color: #1F2937; font-weight: 700; }
+    .hero .desc .hl { color: #8B2252; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+    .hero-btn {
+      display: inline-block;
+      padding: 10px 28px; border-radius: 24px;
+      background: #8B2252; color: white;
+      font-size: 0.9rem; font-weight: 600;
+      letter-spacing: 1px;
+      box-shadow: 0 4px 16px rgba(139,34,82,0.3);
+      margin-bottom: 20px;
+    }
+    .hero-meta {
+      font-size: 0.82rem; color: #9CA3AF;
+    }
+    .hero-meta strong { color: #6B7280; font-weight: 700; }
+
+    .filter-panel {
+      max-width: 1300px; margin: -8px auto 0; padding: 0 24px;
+    }
+    .filter-box {
+      background: var(--card); border-radius: 20px;
+      border: 1px solid #EEEEF0;
+      padding: 20px 28px; box-shadow: var(--shadow);
+    }
+    .filter-title {
+      font-size: 1rem; font-weight: 700; color: var(--text);
+      margin-bottom: 12px;
+    }
+
+    .diff-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px; margin-bottom: 18px;
+    }
+    .diff-card {
+      border-radius: 14px;
+      padding: 16px 12px 14px; text-align: center;
+      cursor: pointer; border: 2px solid transparent;
+      transition: all 0.2s;
+    }
+    .diff-card[data-level="1"] { background: #FFF5F5; }
+    .diff-card[data-level="2"] { background: #FFF5F5; }
+    .diff-card[data-level="3"] { background: #FFF0F6; }
+    .diff-card[data-level="4"] { background: #FCE7F3; }
+    .diff-card[data-level="5"] { background: #FCE7F3; }
+    .diff-card:hover { border-color: #8B2252; }
+    .diff-card.active { border-color: #8B2252; filter: brightness(0.96); }
+    .diff-icon { font-size: 1.8rem; margin-bottom: 6px; display: block; }
+    .diff-name { font-size: 0.95rem; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+    .diff-desc { font-size: 0.72rem; color: #6B7280; margin-bottom: 6px; }
+    .diff-jlpt {
+      display: inline-block; font-size: 0.68rem; font-weight: 600;
+      padding: 2px 8px; border-radius: 4px;
+      background: #FCE7F3; color: #BE185D;
+      margin-bottom: 6px;
+    }
+    .diff-stars { display: flex; justify-content: center; gap: 4px; }
+    .diff-star {
+      display: inline-block; width: 14px; height: 14px;
+      clip-path: polygon(50% 0%, 63% 32%, 98% 35%, 72% 58%, 79% 93%, 50% 73%, 21% 93%, 28% 58%, 2% 35%, 37% 32%);
+    }
+    .diff-star.filled { background: #8B2252; }
+    .diff-star.empty { background: #DDDDE3; }
+
+    .topic-title {
+      font-size: 1rem; font-weight: 700; color: var(--text);
+      margin-bottom: 8px;
+    }
+    .tag-row {
+      display: flex; gap: 8px; flex-wrap: wrap;
+    }
+    .tag-btn {
+      padding: 7px 18px; border-radius: 20px;
+      border: 1.5px solid var(--border);
+      cursor: pointer; font-size: 0.85rem; font-weight: 500;
+      background: white; color: var(--text-secondary);
+      transition: all 0.2s;
+    }
+    .tag-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .tag-btn.active {
+      background: #8B2252; color: white;
+      border-color: #8B2252;
+    }
+
+    .content-area {
+      max-width: 1300px; margin: 0 auto; padding: 24px 24px 48px;
+    }
+    .content-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .content-count { font-size: 0.9rem; color: var(--text-secondary); }
+    .content-count strong { font-weight: 700; }
+    .view-toggle {
+      display: flex; align-items: center; gap: 2px;
+      background: #F3F4F6; border-radius: 8px; padding: 3px;
+    }
+    .view-btn {
+      padding: 6px 8px; border-radius: 6px;
+      border: none; cursor: pointer; background: transparent;
+      color: var(--text-muted); transition: all 0.15s;
+      display: flex; align-items: center;
+    }
+    .view-btn.active { background: white; color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .view-btn svg { width: 16px; height: 16px; }
+
+    .lesson-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+    .lesson-card {
+      background: var(--card); border-radius: var(--radius);
+      overflow: hidden; transition: all 0.25s;
+      box-shadow: var(--shadow); border: 1px solid #EEEEF0;
+    }
+    .lesson-card:hover {
+      box-shadow: var(--shadow-md); transform: translateY(-2px);
+    }
+
+    .card-thumb {
+      position: relative; padding: 0;
+      height: 160px; overflow: hidden;
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+    .card-thumb .ep-cover {
+      width: 100%; height: 100%; object-fit: cover;
+    }
+    .card-thumb .ep-number {
+      font-size: 1rem; font-weight: 600; color: rgba(255,255,255,0.7);
+      position: absolute; right: 16px; bottom: 10px;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    .card-stars {
+      position: absolute; top: 10px; right: 10px;
+      display: flex; gap: 2px;
+      background: rgba(255,255,255,0.85); border-radius: 8px; padding: 3px 6px;
+    }
+    .card-star {
+      display: inline-block; width: 13px; height: 13px;
+      clip-path: polygon(50% 0%, 63% 32%, 98% 35%, 72% 58%, 79% 93%, 50% 73%, 21% 93%, 28% 58%, 2% 35%, 37% 32%);
+    }
+    .card-star.filled { background: #8B2252; }
+    .card-star.empty { background: #DDDDE3; }
+
+    .card-body { padding: 14px 18px 18px; }
+    .card-tags-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+    .card-tag {
+      font-size: 0.7rem; font-weight: 600; padding: 2px 8px;
+      border-radius: 4px;
+    }
+    .card-tag-green { background: #ECFDF5; color: #059669; }
+    .card-tag-blue { background: #EFF6FF; color: #2563EB; }
+    .card-tag-orange { background: #FFF7ED; color: #EA580C; }
+    .card-tag-pink { background: #FDF2F8; color: #DB2777; }
+
+    .card-body h3 {
+      font-size: 0.95rem; font-weight: 700; margin-bottom: 4px; color: var(--text);
+    }
+    .card-body .card-desc {
+      font-size: 0.78rem; color: #6B7280; margin-bottom: 12px;
+    }
+    .card-vocab-label {
+      font-size: 0.7rem; color: var(--text-muted); margin-bottom: 6px;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .card-vocab { display: flex; gap: 6px; flex-wrap: wrap; }
+    .card-vocab span {
+      font-size: 0.7rem; padding: 3px 8px;
+      background: transparent; border: none;
+      border-radius: 6px; color: #8B2252; font-weight: 500;
+    }
+
+    .lesson-list { display: flex; flex-direction: column; gap: 10px; }
+    .lesson-card-list {
+      background: var(--card); border-radius: 14px;
+      border: 1px solid #F3D5E0;
+      display: flex; align-items: flex-start; gap: 16px;
+      padding: 18px 24px; transition: all 0.2s;
+      box-shadow: var(--shadow);
+    }
+    .lesson-card-list:hover { box-shadow: var(--shadow-md); }
+    .list-icon {
+      width: 56px; height: 56px; border-radius: 14px;
+      overflow: hidden; flex-shrink: 0; margin-top: 2px;
+    }
+    .list-body { flex: 1; min-width: 0; }
+    .list-title-row { display: flex; align-items: center; gap: 8px; margin-bottom: 2px; }
+    .list-title-row h3 { font-size: 0.95rem; font-weight: 700; }
+    .list-title-row .list-stars { display: flex; gap: 1px; }
+    .list-title-row .card-star { width: 11px; height: 11px; }
+    .list-body .list-desc { font-size: 0.8rem; color: #6B7280; margin-bottom: 8px; }
+    .list-meta-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .list-meta-row .card-tag { font-size: 0.68rem; }
+    .list-meta-divider {
+      width: 1px; height: 14px; background: #D1D5DB; flex-shrink: 0;
+    }
+    .list-meta-row .list-vocab { display: flex; gap: 10px; }
+    .list-meta-row .list-vocab span { font-size: 0.75rem; color: #8B2252; font-weight: 500; }
+    .list-number {
+      font-size: 0.9rem; font-weight: 600; color: #D1D5DB;
+      flex-shrink: 0; margin-top: 4px;
+    }
+
+    .tools-section {
+      max-width: 1300px; margin: 0 auto; padding: 0 24px 48px;
+    }
+    .tools-label {
+      font-size: 0.9rem; font-weight: 700; color: var(--text-secondary);
+      margin-bottom: 12px;
+    }
+    .tools-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+    }
+    .tool-card {
+      background: var(--card); border-radius: 12px;
+      border: 1px solid #EEEEF0;
+      padding: 14px 16px; display: flex; align-items: center; gap: 12px;
+      transition: all 0.2s; box-shadow: var(--shadow);
+    }
+    .tool-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+    .tool-icon {
+      width: 38px; height: 38px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; color: white;
+    }
+    .tool-card h4 { font-size: 0.82rem; font-weight: 600; }
+    .tool-card p { font-size: 0.7rem; color: var(--text-muted); }
+
+    .empty-state { text-align: center; padding: 64px 20px; color: var(--text-muted); display: none; }
+    .empty-state.show { display: block; }
+    .empty-state p:first-child { font-size: 1.1rem; }
+    .empty-state p:last-child { font-size: 0.85rem; margin-top: 4px; }
+
+    .footer { border-top: 1px solid #EEEEF0; background: white; }
+    .footer-inner { max-width: 1300px; margin: 0 auto; padding: 36px 24px; }
+    .footer-row {
+      display: flex; flex-wrap: wrap; align-items: center;
+      justify-content: space-between; gap: 16px;
+    }
+    .footer-brand { display: flex; align-items: center; gap: 8px; }
+    .footer-brand span:last-child { font-weight: 700; font-size: 0.9rem; }
+    .footer-slogan { font-size: 0.82rem; color: var(--text-muted); }
+    .footer-links { display: flex; gap: 16px; }
+    .footer-links a { font-size: 0.82rem; color: var(--text-muted); transition: color 0.2s; }
+    .footer-links a:hover { color: var(--primary); }
+    .footer-copy { text-align: center; font-size: 0.7rem; color: #D1D5DB; margin-top: 20px; }
+
+    @media (max-width: 1024px) {
+      .lesson-grid { grid-template-columns: repeat(2, 1fr); }
+      .diff-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 640px) {
+      .hero h1 { font-size: 1.6rem; }
+      .lesson-grid { grid-template-columns: 1fr; }
+      .diff-grid { grid-template-columns: repeat(2, 1fr); }
+      .footer-row { flex-direction: column; text-align: center; }
+    }
+  </style>
 </head>
 <body>
 
   <nav class="nav">
     <div class="nav-inner">
-      <a href="index.html" class="nav-logo">
-        <span class="flag">🇯🇵</span> 养成地道日语大脑
-      </a>
+      <span class="nav-flag">🇯🇵</span>
+      <span class="nav-title">养成地道日语大脑</span>
     </div>
   </nav>
 
   <section class="hero">
+    <p class="hero-sub">日本語を自然に</p>
     <h1>养成地道日语大脑</h1>
-    <p class="subtitle">跟着日本母语博主，用六步学习法练出地道日语口语</p>
-    <span class="method-tag">六步学習法 · 聞く話す読む練る</span>
+    <p class="desc">跟着<strong>日本母语博主</strong>，用<span class="hl">六步学习法</span>练出地道日语口语</p>
+    <a href="#lessons" class="hero-btn">六步学習法 · 聞く話す読む練る</a>
+    <p class="hero-meta">已有 <strong>10</strong> 期内容 · 覆盖日常 / 旅行 / 美食等话题</p>
   </section>
 
-  <section class="episodes-section">
-    <h2>学習コンテンツ</h2>
-    <div class="episode-grid">
+  <div class="filter-panel" id="lessons">
+    <div class="filter-box">
+      <div class="filter-title">选择难度</div>
+      <div class="diff-grid" id="diffGrid">
+        <div class="diff-card" data-level="1">
+          <span class="diff-icon">🌱</span>
+          <div class="diff-name">入门</div>
+          <div class="diff-desc">零基础也能学</div>
+          <span class="diff-jlpt">适合JLPT N5入门</span>
+          <div class="diff-stars">
+            <span class="diff-star filled"></span><span class="diff-star empty"></span><span class="diff-star empty"></span><span class="diff-star empty"></span><span class="diff-star empty"></span>
+          </div>
+        </div>
+        <div class="diff-card" data-level="2">
+          <span class="diff-icon">🌿</span>
+          <div class="diff-name">基础</div>
+          <div class="diff-desc">学过五十音和基本语法</div>
+          <span class="diff-jlpt">适合JLPT N4打基础</span>
+          <div class="diff-stars">
+            <span class="diff-star filled"></span><span class="diff-star filled"></span><span class="diff-star empty"></span><span class="diff-star empty"></span><span class="diff-star empty"></span>
+          </div>
+        </div>
+        <div class="diff-card" data-level="3">
+          <span class="diff-icon">🌺</span>
+          <div class="diff-name">进阶</div>
+          <div class="diff-desc">能进行简单日常对话</div>
+          <span class="diff-jlpt">适合JLPT N3过渡阅读</span>
+          <div class="diff-stars">
+            <span class="diff-star filled"></span><span class="diff-star filled"></span><span class="diff-star filled"></span><span class="diff-star empty"></span><span class="diff-star empty"></span>
+          </div>
+        </div>
+        <div class="diff-card" data-level="4">
+          <span class="diff-icon">🔥</span>
+          <div class="diff-name">高级</div>
+          <div class="diff-desc">可以看懂日剧大意</div>
+          <span class="diff-jlpt">适合JLPT N2提升阅读</span>
+          <div class="diff-stars">
+            <span class="diff-star filled"></span><span class="diff-star filled"></span><span class="diff-star filled"></span><span class="diff-star filled"></span><span class="diff-star empty"></span>
+          </div>
+        </div>
+        <div class="diff-card" data-level="5">
+          <span class="diff-icon">👑</span>
+          <div class="diff-name">母语级</div>
+          <div class="diff-desc">接近母语水平表达</div>
+          <span class="diff-jlpt">适合JLPT N1+精读</span>
+          <div class="diff-stars">
+            <span class="diff-star filled"></span><span class="diff-star filled"></span><span class="diff-star filled"></span><span class="diff-star filled"></span><span class="diff-star filled"></span>
+          </div>
+        </div>
+      </div>
 
-      <a href="episode1.html" class="episode-card">
-        <div class="card-thumb" style="background: linear-gradient(135deg, #8B2252 0%, #B5446E 100%);">
-          <span class="ep-icon">🍛</span>
-          <span class="ep-number">01</span>
-        </div>
-        <div class="card-body">
-          <div class="card-tags">
-            <span class="tag tag-topic">暮らし</span>
-            <span class="tag tag-creator">丁寧な暮らし vlog</span>
-          </div>
-          <h3>用心做一顿饭</h3>
-          <p>野菜中心の丁寧なおうちごはん</p>
-          <div class="card-keywords">
-            <span class="keyword">食事 饮食</span>
-            <span class="keyword">摂取 摄取</span>
-            <span class="keyword">添加物 添加剂</span>
-            <span class="keyword">選ぶ 选择</span>
-          </div>
-        </div>
-      </a>
-
-      <a href="episode2.html" class="episode-card">
-        <div class="card-thumb" style="background: linear-gradient(135deg, #2E6B4F 0%, #3D8B68 100%);">
-          <span class="ep-icon">🛒</span>
-          <span class="ep-number">02</span>
-        </div>
-        <div class="card-body">
-          <div class="card-tags">
-            <span class="tag tag-topic">自炊</span>
-            <span class="tag tag-creator">一人暮らし</span>
-          </div>
-          <h3>一个人的微波炉一周餐</h3>
-          <p>レンジだけで充実した自炊生活</p>
-          <div class="card-keywords">
-            <span class="keyword">冷蔵庫 冰箱</span>
-            <span class="keyword">買い物 购物</span>
-            <span class="keyword">レシピ 食谱</span>
-            <span class="keyword">美味しい 好吃</span>
-          </div>
-        </div>
-      </a>
-
-      <a href="episode3.html" class="episode-card">
-        <div class="card-thumb" style="background: linear-gradient(135deg, #8B4572 0%, #C06090 100%);">
-          <span class="ep-icon">💄</span>
-          <span class="ep-number">03</span>
-        </div>
-        <div class="card-body">
-          <div class="card-tags">
-            <span class="tag tag-topic">化妆</span>
-            <span class="tag tag-creator">ミキぽんチャンネル</span>
-          </div>
-          <h3>年度爱用好物来画个日常妆</h3>
-          <p>2016マイベストコスメで毎日メイク</p>
-          <div class="card-keywords">
-            <span class="keyword">保湿 护肤</span>
-            <span class="keyword">テクスチャー 质地</span>
-            <span class="keyword">ファンデーション 粉底</span>
-            <span class="keyword">薄付き 薄透</span>
-          </div>
-        </div>
-      </a>
-
-      <a href="episode4.html" class="episode-card">
-        <div class="card-thumb" style="background: linear-gradient(135deg, #3D5A80 0%, #5B8DB8 100%);">
-          <span class="ep-icon">📚</span>
-          <span class="ep-number">04</span>
-        </div>
-        <div class="card-body">
-          <div class="card-tags">
-            <span class="tag tag-topic">学习</span>
-            <span class="tag tag-creator">まりな_StudyVlog</span>
-          </div>
-          <h3>学到睡觉为止的学习直播日常</h3>
-          <p>社会人勉強ルーティン・ライティング勉強法</p>
-          <div class="card-keywords">
-            <span class="keyword">勉強配信 学习直播</span>
-            <span class="keyword">手書き 手写</span>
-            <span class="keyword">定着率 留存率</span>
-            <span class="keyword">例文 例句</span>
-          </div>
-        </div>
-      </a>
-
-      <a href="episode5.html" class="episode-card">
-        <div class="card-thumb" style="background: linear-gradient(135deg, #6B4C3B 0%, #9B7B6B 100%);">
-          <span class="ep-icon">🏫</span>
-          <span class="ep-number">05</span>
-        </div>
-        <div class="card-body">
-          <div class="card-tags">
-            <span class="tag tag-topic">上学</span>
-            <span class="tag tag-creator">Mahiro :)</span>
-          </div>
-          <h3>大学生的一天：上课和课后咖啡时光</h3>
-          <p>大学生の1日・授業とスタバの放課後</p>
-          <div class="card-keywords">
-            <span class="keyword">教室 教室</span>
-            <span class="keyword">授業 课程</span>
-            <span class="keyword">課題 作业</span>
-            <span class="keyword">充実 充实</span>
-          </div>
-        </div>
-      </a>
-
-      <a href="episode6.html" class="episode-card">
-        <div class="card-thumb" style="background: linear-gradient(135deg, #4A6741 0%, #6B8F62 100%);">
-          <span class="ep-icon">☕</span>
-          <span class="ep-number">06</span>
-        </div>
-        <div class="card-body">
-          <div class="card-tags">
-            <span class="tag tag-topic">旅行</span>
-            <span class="tag tag-creator">江莉香・やさしい日本語</span>
-          </div>
-          <h3>富山探店：世界最美星巴克与尼泊尔咖喱</h3>
-          <p>やさしい日本語で富山ドライブ・スタバ＆ネパールカレー</p>
-          <div class="card-keywords">
-            <span class="keyword">スタバ 星巴克</span>
-            <span class="keyword">オシャレ 时髦</span>
-            <span class="keyword">注文 点餐</span>
-            <span class="keyword">便利 方便</span>
-          </div>
-        </div>
-      </a>
-
-      <a href="episode7.html" class="episode-card">
-        <div class="card-thumb" style="background: linear-gradient(135deg, #3B5998 0%, #5B79B8 100%);">
-          <span class="ep-icon">🚄</span>
-          <span class="ep-number">07</span>
-        </div>
-        <div class="card-body">
-          <div class="card-tags">
-            <span class="tag tag-topic">旅行</span>
-            <span class="tag tag-creator">Easy Japanese Listening</span>
-          </div>
-          <h3>坐电车去长野：基础旅行日语入门</h3>
-          <p>やさしい日本語で長野旅行・電車の旅</p>
-          <div class="card-keywords">
-            <span class="keyword">旅行 旅行</span>
-            <span class="keyword">電車 电车</span>
-            <span class="keyword">特急 特急</span>
-            <span class="keyword">便利 方便</span>
-          </div>
-        </div>
-      </a>
-
-      <a href="episode8.html" class="episode-card">
-        <div class="card-thumb" style="background: linear-gradient(135deg, #6B4C8A 0%, #9B7BB8 100%);">
-          <span class="ep-icon">🌅</span>
-          <span class="ep-number">08</span>
-        </div>
-        <div class="card-body">
-          <div class="card-tags">
-            <span class="tag tag-topic">日常</span>
-            <span class="tag tag-creator">やさしい日本語リスニング</span>
-          </div>
-          <h3>私の一日：朝のルーティン</h3>
-          <p>やさしい日本語リスニングストーリー・朝の生活</p>
-          <div class="card-keywords">
-            <span class="keyword">アラーム 闹钟</span>
-            <span class="keyword">晴れ渡る 万里晴空</span>
-            <span class="keyword">差し込む 照进来</span>
-            <span class="keyword">すっきり 清爽</span>
-          </div>
-        </div>
-      </a>
-
-      <a href="episode9.html" class="episode-card">
-        <div class="card-thumb" style="background: linear-gradient(135deg, #8B6B4A 0%, #C09B6B 100%);">
-          <span class="ep-icon">👜</span>
-          <span class="ep-number">09</span>
-        </div>
-        <div class="card-body">
-          <div class="card-tags">
-            <span class="tag tag-topic">服装</span>
-            <span class="tag tag-creator">茜</span>
-          </div>
-          <h3>私が買った服を紹介：奥特莱斯购物</h3>
-          <p>茜のショッピングvlog・アウトレット</p>
-          <div class="card-keywords">
-            <span class="keyword">紹介する 介绍</span>
-            <span class="keyword">アウトレット 奥特莱斯</span>
-            <span class="keyword">スカート 裙子</span>
-            <span class="keyword">割引 折扣</span>
-          </div>
-        </div>
-      </a>
-
-      <a href="episode10.html" class="episode-card">
-        <div class="card-thumb" style="background: linear-gradient(135deg, #2B6C8B 0%, #4A9BB8 100%);">
-          <span class="ep-icon">⛩️</span>
-          <span class="ep-number">10</span>
-        </div>
-        <div class="card-body">
-          <div class="card-tags">
-            <span class="tag tag-topic">旅游</span>
-            <span class="tag tag-creator">日本語教師の旬</span>
-          </div>
-          <h3>家族と京都旅行：京都観光vlog</h3>
-          <p>日本語教師の旬・京都観光</p>
-          <div class="card-keywords">
-            <span class="keyword">観光 观光</span>
-            <span class="keyword">休日 休息日</span>
-            <span class="keyword">便利 方便</span>
-            <span class="keyword">お寺 寺庙</span>
-          </div>
-        </div>
-      </a>
-
+      <div class="topic-title">话题筛选</div>
+      <div class="tag-row" id="tagRow">
+        <button class="tag-btn active" data-tag="全部">全部</button>
+        <button class="tag-btn" data-tag="美食">美食</button>
+        <button class="tag-btn" data-tag="旅行">旅行</button>
+        <button class="tag-btn" data-tag="日常">日常</button>
+        <button class="tag-btn" data-tag="化妆">化妆</button>
+        <button class="tag-btn" data-tag="学习">学习</button>
+        <button class="tag-btn" data-tag="服装">服装</button>
+      </div>
     </div>
-  </section>
+  </div>
 
-  <!-- 工具页 -->
-  <section class="episodes-section" style="padding-top: 0;">
-    <h2>更多工具</h2>
-    <div class="episode-grid">
-
-      <a href="recording.html" class="episode-card">
-        <div class="card-thumb" style="background: linear-gradient(135deg, #7C3AED 0%, #A78BFA 100%);">
-          <span class="ep-icon">🎬</span>
-        </div>
-        <div class="card-body">
-          <h3>日语录屏版</h3>
-          <p>375px 录屏专用视图</p>
-        </div>
-      </a>
-
-      <a href="mobile-reading.html" class="episode-card">
-        <div class="card-thumb" style="background: linear-gradient(135deg, #DB2777 0%, #F472B6 100%);">
-          <span class="ep-icon">📱</span>
-        </div>
-        <div class="card-body">
-          <h3>手机跟读版</h3>
-          <p>390px 手机跟读练习</p>
-        </div>
-      </a>
-
-      <a href="timestamp_tool.html" class="episode-card">
-        <div class="card-thumb" style="background: linear-gradient(135deg, #D97706 0%, #FBBF24 100%);">
-          <span class="ep-icon">⏱️</span>
-        </div>
-        <div class="card-body">
-          <h3>字幕打点工具</h3>
-          <p>视频时间戳标记与导出</p>
-        </div>
-      </a>
-
+  <div class="content-area">
+    <div class="content-header">
+      <p class="content-count">共 <strong id="countNum">10</strong> 期内容</p>
+      <div class="view-toggle">
+        <button class="view-btn active" id="btnGrid">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        </button>
+        <button class="view-btn" id="btnList">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        </button>
+      </div>
     </div>
-  </section>
+
+    <div class="lesson-grid" id="lessonGrid"></div>
+    <div class="lesson-list" id="lessonList" style="display:none;"></div>
+    <div class="empty-state" id="emptyState">
+      <p>暂无匹配的课程</p>
+      <p>试试调整难度或话题筛选</p>
+    </div>
+  </div>
+
+  <div class="tools-section">
+    <div class="tools-label">更多工具</div>
+    <div class="tools-grid">
+      <a href="recording.html" class="tool-card">
+        <div class="tool-icon" style="background:linear-gradient(135deg,#7C3AED,#A78BFA);">🎬</div>
+        <div><h4>日语录屏版</h4><p>375px 录屏专用视图</p></div>
+      </a>
+      <a href="mobile-reading.html" class="tool-card">
+        <div class="tool-icon" style="background:linear-gradient(135deg,#DB2777,#F472B6);">📱</div>
+        <div><h4>手机跟读版</h4><p>390px 手机跟读练习</p></div>
+      </a>
+      <a href="timestamp_tool.html" class="tool-card">
+        <div class="tool-icon" style="background:linear-gradient(135deg,#D97706,#FBBF24);">⏱️</div>
+        <div><h4>字幕打点工具</h4><p>视频时间戳标记与导出</p></div>
+      </a>
+    </div>
+  </div>
 
   <footer class="footer">
-    <p>养成地道日语大脑 &copy; 2025 &middot; 油管原视频版权归原博主所有</p>
+    <div class="footer-inner">
+      <div class="footer-row">
+        <div class="footer-brand"><span>🇯🇵</span><span>养成地道日语大脑</span></div>
+        <p class="footer-slogan">让日语学习更有趣 · 跟着母语博主一起成长</p>
+        <div class="footer-links">
+          <a href="#">📕 小红书</a>
+          <a href="#">📺 B站</a>
+          <a href="#">💬 微信群</a>
+        </div>
+      </div>
+      <p class="footer-copy">&copy; 2026 养成地道日语大脑 · 油管原视频版权归原博主所有</p>
+    </div>
   </footer>
+
+  <script>
+    var lessons = [
+      {
+        number: '01', cover: 'media/covers/ep1.png', page: 'episode1.html',
+        difficulty: 3,
+        tags: [{ label: '美食', color: 'orange' }, { label: '丁寧な暮らし vlog', color: 'pink' }],
+        title: '用心做一顿饭',
+        desc: '野菜中心の丁寧なおうちごはん',
+        vocab: ['摂取する 摄取', '添加物 添加剂', '選ぶ 选择']
+      },
+      {
+        number: '02', cover: 'media/covers/ep2.png', page: 'episode2.html',
+        difficulty: 2,
+        tags: [{ label: '美食', color: 'orange' }, { label: '一人暮らし', color: 'blue' }],
+        title: '一个人的微波炉一周餐',
+        desc: 'レンジだけで充実した自炊生活',
+        vocab: ['冷蔵庫 冰箱', 'レシピ 食谱', '美味しい 好吃']
+      },
+      {
+        number: '03', cover: 'media/covers/ep3.png', page: 'episode3.html',
+        difficulty: 3,
+        tags: [{ label: '化妆', color: 'pink' }, { label: 'ミキぽんチャンネル', color: 'blue' }],
+        title: '年度爱用好物来画个日常妆',
+        desc: '2016マイベストコスメで毎日メイク',
+        vocab: ['テクスチャー 质地', 'ファンデーション 粉底', '薄付き 薄透']
+      },
+      {
+        number: '04', cover: 'media/covers/ep4.png', page: 'episode4.html',
+        difficulty: 3,
+        tags: [{ label: '学习', color: 'blue' }, { label: 'まりな_StudyVlog', color: 'green' }],
+        title: '学到睡觉为止的学习直播日常',
+        desc: '社会人勉強ルーティン・ライティング勉強法',
+        vocab: ['勉強配信 学习直播', '手書き 手写', '定着率 留存率']
+      },
+      {
+        number: '05', cover: 'media/covers/ep5.png', page: 'episode5.html',
+        difficulty: 2,
+        tags: [{ label: '日常', color: 'green' }, { label: 'Mahiro :)', color: 'pink' }],
+        title: '大学生的一天：上课和课后咖啡时光',
+        desc: '大学生の1日・授業とスタバの放課後',
+        vocab: ['授業 课程', '課題 作业', '充実 充实']
+      },
+      {
+        number: '06', cover: 'media/covers/ep6.png', page: 'episode6.html',
+        difficulty: 2,
+        tags: [{ label: '旅行', color: 'green' }, { label: '江莉香・やさしい日本語', color: 'blue' }],
+        title: '富山探店：世界最美星巴克与尼泊尔咖喱',
+        desc: 'やさしい日本語で富山ドライブ',
+        vocab: ['スタバ 星巴克', 'オシャレ 时髦', '注文 点餐']
+      },
+      {
+        number: '07', cover: 'media/covers/ep7.png', page: 'episode7.html',
+        difficulty: 1,
+        tags: [{ label: '旅行', color: 'green' }, { label: 'Easy Japanese', color: 'blue' }],
+        title: '坐电车去长野：基础旅行日语入门',
+        desc: 'やさしい日本語で長野旅行・電車の旅',
+        vocab: ['旅行 旅行', '電車 电车', '特急 特急']
+      },
+      {
+        number: '08', cover: 'media/covers/ep8.png', page: 'episode8.html',
+        difficulty: 1,
+        tags: [{ label: '日常', color: 'green' }, { label: 'やさしい日本語リスニング', color: 'blue' }],
+        title: '私の一日：朝のルーティン',
+        desc: 'やさしい日本語リスニングストーリー・朝の生活',
+        vocab: ['アラーム 闹钟', '晴れ渡る 万里晴空', 'すっきり 清爽']
+      },
+      {
+        number: '09', cover: 'media/covers/ep9.png', page: 'episode9.html',
+        difficulty: 2,
+        tags: [{ label: '服装', color: 'orange' }, { label: '茜', color: 'pink' }],
+        title: '私が買った服を紹介：奥特莱斯购物',
+        desc: '茜のショッピングvlog・アウトレット',
+        vocab: ['紹介する 介绍', 'アウトレット 奥特莱斯', '割引 折扣']
+      },
+      {
+        number: '10', cover: 'media/covers/ep10.png', page: 'episode10.html',
+        difficulty: 2,
+        tags: [{ label: '旅行', color: 'green' }, { label: '日本語教師の旬', color: 'blue' }],
+        title: '家族と京都旅行：京都観光vlog',
+        desc: '日本語教師の旬・京都観光',
+        vocab: ['観光 观光', '休日 休息日', '便利 方便']
+      }
+    ];
+
+    var activeTag = '全部';
+    var activeDifficulty = null;
+    var viewMode = 'grid';
+
+    function getFiltered() {
+      return lessons.filter(function(l) {
+        if (activeDifficulty !== null && l.difficulty !== activeDifficulty) return false;
+        if (activeTag !== '全部' && !l.tags.some(function(t) { return t.label === activeTag; })) return false;
+        return true;
+      });
+    }
+
+    function starsHTML(difficulty, max) {
+      var s = '';
+      for (var i = 0; i < max; i++) {
+        if (i < difficulty) s += '<span class="card-star filled"></span>';
+        else s += '<span class="card-star empty"></span>';
+      }
+      return s;
+    }
+
+    function renderGrid(items) {
+      return items.map(function(l) {
+        var tags = l.tags.map(function(t) {
+          return '<span class="card-tag card-tag-' + t.color + '">' + t.label + '</span>';
+        }).join('');
+        var vocabs = l.vocab.map(function(v) {
+          return '<span>' + v + '</span>';
+        }).join('');
+
+        return '<a href="' + l.page + '" class="lesson-card">' +
+          '<div class="card-thumb">' +
+            '<img class="ep-cover" src="' + l.cover + '" alt="' + l.title + '">' +
+            '<div class="card-stars">' + starsHTML(l.difficulty, 5) + '</div>' +
+            '<span class="ep-number">' + l.number + '</span>' +
+          '</div>' +
+          '<div class="card-body">' +
+            '<div class="card-tags-row">' + tags + '</div>' +
+            '<h3>' + l.title + '</h3>' +
+            '<p class="card-desc">' + l.desc + '</p>' +
+            '<div class="card-vocab-label">📝 本期核心词汇</div>' +
+            '<div class="card-vocab">' + vocabs + '</div>' +
+          '</div>' +
+        '</a>';
+      }).join('');
+    }
+
+    function renderList(items) {
+      return items.map(function(l) {
+        var tags = l.tags.map(function(t) {
+          return '<span class="card-tag card-tag-' + t.color + '">' + t.label + '</span>';
+        }).join('');
+        var vocabs = l.vocab.map(function(v) {
+          return '<span>' + v + '</span>';
+        }).join('');
+
+        return '<a href="' + l.page + '" class="lesson-card-list">' +
+          '<div class="list-icon"><img src="' + l.cover + '" style="width:100%;height:100%;object-fit:cover;border-radius:12px;" alt=""></div>' +
+          '<div class="list-body">' +
+            '<div class="list-title-row">' +
+              '<h3>' + l.title + '</h3>' +
+              '<div class="list-stars">' + starsHTML(l.difficulty, 5) + '</div>' +
+            '</div>' +
+            '<p class="list-desc">' + l.desc + '</p>' +
+            '<div class="list-meta-row">' +
+              tags +
+              '<span class="list-meta-divider"></span>' +
+              '<div class="list-vocab">' + vocabs + '</div>' +
+            '</div>' +
+          '</div>' +
+          '<span class="list-number">' + l.number + '</span>' +
+        '</a>';
+      }).join('');
+    }
+
+    function render() {
+      var items = getFiltered();
+      document.getElementById('countNum').textContent = items.length;
+      document.getElementById('lessonGrid').innerHTML = renderGrid(items);
+      document.getElementById('lessonList').innerHTML = renderList(items);
+      document.getElementById('emptyState').className = 'empty-state' + (items.length === 0 ? ' show' : '');
+      document.getElementById('lessonGrid').style.display = viewMode === 'grid' ? '' : 'none';
+      document.getElementById('lessonList').style.display = viewMode === 'list' ? '' : 'none';
+    }
+
+    document.getElementById('diffGrid').addEventListener('click', function(e) {
+      var card = e.target.closest('.diff-card');
+      if (!card) return;
+      var level = parseInt(card.dataset.level);
+      activeDifficulty = activeDifficulty === level ? null : level;
+      document.querySelectorAll('.diff-card').forEach(function(c) {
+        c.classList.toggle('active', parseInt(c.dataset.level) === activeDifficulty);
+      });
+      render();
+    });
+
+    document.getElementById('tagRow').addEventListener('click', function(e) {
+      var btn = e.target.closest('.tag-btn');
+      if (!btn) return;
+      activeTag = btn.dataset.tag;
+      document.querySelectorAll('.tag-btn').forEach(function(b) {
+        b.classList.toggle('active', b.dataset.tag === activeTag);
+      });
+      render();
+    });
+
+    document.getElementById('btnGrid').addEventListener('click', function() {
+      viewMode = 'grid';
+      this.classList.add('active');
+      document.getElementById('btnList').classList.remove('active');
+      render();
+    });
+    document.getElementById('btnList').addEventListener('click', function() {
+      viewMode = 'list';
+      this.classList.add('active');
+      document.getElementById('btnGrid').classList.remove('active');
+      render();
+    });
+
+    render();
+  </script>
 
 </body>
 </html>
