@@ -25,6 +25,8 @@
     { "source": "/episode22", "destination": "/episode22.html" },
     { "source": "/episode23", "destination": "/episode23.html" },
     { "source": "/episode24", "destination": "/episode24.html" },
+    { "source": "/episode25", "destination": "/episode25.html" },
+    { "source": "/episode26", "destination": "/episode26.html" },
     { "source": "/timestamp-tool", "destination": "/timestamp_tool.html" },
     { "source": "/recording", "destination": "/recording.html" },
     { "source": "/mobile-reading", "destination": "/mobile-reading.html" }
